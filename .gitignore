@@ -1,0 +1,32 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj
+!default.xcodeproj
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.xcuserstate
+*.xcworkspace
+!default.xcworkspace
+
+# XcodeGen generates the project from project.yml — never commit the output
+/*.xcodeproj/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# CocoaPods (not used, kept in case it's added later)
+Pods/
+
+# macOS
+.DS_Store
+
+# Secrets — crisis pattern list is intentionally not committed in plaintext,
+# see LumiApp/Core/Crisis/README.md
+LumiApp/Resources/CrisisPatterns.json
+*.xcconfig.local
