@@ -1283,7 +1283,7 @@ class Component extends DCLogic {
     const widgetTabStreakStyle = tabBase + (this.state.widgetStreak ? 'background:#8b6cf6;color:#fff;' : 'color:#9c93c9;');
 
     const showTabBar = ['home','catalog','profile'].includes(s);
-    const excludedBack = ['splash','welcome','disclaimer','ob1','ob2','ob3','ob4','planloading','obtrack','streakstart','home','catalog','profile','shop'];
+    const excludedBack = ['splash','welcome','disclaimer','ob1','ob2','ob3','ob4','planloading','obtrack','streakstart','home','catalog','profile'];
     const showBack = !excludedBack.includes(s);
 
     const checkEx3 = () => { if (!this.state.ex3Checked) this.setState({ ex3Checked: true }); else this.goTo('ex4'); };
