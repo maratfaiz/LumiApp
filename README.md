@@ -11,6 +11,7 @@
 ## Структура репозитория
 
 - [`docs/product/`](docs/product/README.md) — продуктовая документация (PRD, MVP scope, функции, контент курсов, экономика, кризисный протокол).
+- [`docs/design/prototype/`](docs/design/prototype/README.md) — кликабельный дизайн-прототип экранов (нужен локальный сервер, см. README внутри).
 - `LumiApp/` — исходный код iOS-приложения (SwiftUI, iOS 17+).
 - `LumiAppTests/` — unit-тесты (Swift Testing).
 - `project.yml` — описание Xcode-проекта для [XcodeGen](https://github.com/yonaskolb/XcodeGen); сам `.xcodeproj` не хранится в git и генерируется из этого файла.
