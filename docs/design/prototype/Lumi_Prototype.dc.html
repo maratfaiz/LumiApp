@@ -19,6 +19,11 @@
   a:hover { color: #c3b3ff; }
   ::-webkit-scrollbar { width: 6px; height:6px; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  @keyframes lumiTwinkle { 0%,100% { opacity:0.25; transform:scale(0.7); } 50% { opacity:1; transform:scale(1.15); } }
+
+  @keyframes lumiPop { 0% { opacity:0; transform:scale(0.6); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes lumiRingDraw { 0% { stroke-dashoffset:439.8; } 100% { stroke-dashoffset:377; } }
+  @keyframes lumiFlamePop { 0% { opacity:0; transform:scale(0.3) translateY(10px); } 60% { opacity:1; transform:scale(1.15) translateY(0); } 100% { opacity:1; transform:scale(1) translateY(0); } }
 </style>
 </helmet>
 
@@ -46,6 +51,7 @@
         </span>
       </div>
 
+
       <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
         <div onClick="{{ go.back }}" style="padding:6px 20px 4px;font-size:14px;color:#c9c2e6;cursor:pointer;font-weight:700">←</div>
       </sc-if>
@@ -53,7 +59,11 @@
       <div style="height:calc(100% - 44px - 74px);overflow-y:auto;padding:18px 20px 24px">
 
         <sc-if value="{{ is.splash }}" hint-placeholder-val="{{ true }}">
-          <div onClick="{{ go.welcome }}" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px">
+          <div onClick="{{ go.welcome }}" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;position:relative">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="#8b6cf6" style="position:absolute;top:8%;left:12%;animation:lumiTwinkle 2s ease-in-out infinite"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="#b39dff" style="position:absolute;top:18%;right:14%;animation:lumiTwinkle 2.4s ease-in-out infinite 0.5s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#6c4fe0" style="position:absolute;bottom:14%;left:16%;animation:lumiTwinkle 1.8s ease-in-out infinite 1s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="8" height="8" fill="#c9c2e6" style="position:absolute;bottom:26%;right:10%;animation:lumiTwinkle 2.1s ease-in-out infinite 1.4s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
             <div style="font-size:44px;font-weight:900;color:#fff">Луми</div>
             <div style="font-size:13px;color:#9c93c9;margin-bottom:18px">Твой путь к уверенности</div>
             <div style="width:170px;height:170px;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:22px">
@@ -66,7 +76,11 @@
         </sc-if>
 
         <sc-if value="{{ is.welcome }}" hint-placeholder-val="{{ false }}">
-          <div style="height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:6px">
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:6px;position:relative">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="#8b6cf6" style="position:absolute;top:4%;left:10%;animation:lumiTwinkle 2.2s ease-in-out infinite"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="#b39dff" style="position:absolute;top:12%;right:12%;animation:lumiTwinkle 1.9s ease-in-out infinite 0.6s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="#6c4fe0" style="position:absolute;top:46%;left:6%;animation:lumiTwinkle 2.4s ease-in-out infinite 1.1s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="8" height="8" fill="#c9c2e6" style="position:absolute;top:52%;right:8%;animation:lumiTwinkle 2s ease-in-out infinite 0.3s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
             <div style="font-size:46px;font-weight:900;color:#fff;line-height:1.1;margin-top:32px">Луми</div>
             <div style="font-size:15px;color:#9c93c9;margin-top:6px;line-height:1.4">Каждый день чуть ближе к себе</div>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">
@@ -231,19 +245,35 @@
         </sc-if>
 
         <sc-if value="{{ is.streakstart }}" hint-placeholder-val="{{ false }}">
-          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px">
-            <div style="font-size:18px;font-weight:900;color:#fff">Серия начата!</div>
-            <div style="position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center">
-              <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,159,67,0.28),rgba(255,159,67,0) 72%)"></div>
-              <svg width="150" height="150" style="position:absolute;transform:rotate(-90deg)"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"></circle><circle cx="75" cy="75" r="66" fill="none" stroke="url(#streakstartGrad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="355"></circle><defs><linearGradient id="streakstartGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb37a"></stop><stop offset="1" stop-color="#ff7a4d"></stop></linearGradient></defs></svg>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="#ffb37a"><path d="M12.5 2c1 3-1.5 4.5-1.5 7.5 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5c1.7 1.4 3 3.7 3 6 0 3.6-2.9 6.5-6.5 6.5S6 19.1 6 15.5c0-4.2 2.8-6.5 4.3-9.2C10.8 5.2 11.4 3.5 12.5 2z"></path></svg>
-                <div style="font-size:34px;font-weight:900;color:#fff;line-height:1">1</div>
+          <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;position:relative;padding-top:62px">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="#ffb37a" style="position:absolute;top:6%;left:14%;animation:lumiTwinkle 1.8s ease-in-out infinite"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="#8b6cf6" style="position:absolute;top:16%;right:12%;animation:lumiTwinkle 2.2s ease-in-out infinite 0.4s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="#ff7a4d" style="position:absolute;bottom:30%;left:8%;animation:lumiTwinkle 2s ease-in-out infinite 0.8s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+            <svg viewBox="0 0 24 24" width="9" height="9" fill="#ffe08a" style="position:absolute;bottom:24%;right:10%;animation:lumiTwinkle 1.6s ease-in-out infinite 1.2s"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>
+
+            <div style="background:rgba(255,159,67,0.14);border:1px solid rgba(255,159,67,0.35);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:800;color:#ffb37a;letter-spacing:0.3px;animation:lumiPop 0.5s ease-out;margin-bottom:12px">НОВАЯ СЕРИЯ</div>
+            <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.15;margin-bottom:22px;margin-top:18px">Серия <span style="color:#ffb37a">начата!</span></div>
+            <div style="position:relative;width:158px;height:158px;display:flex;align-items:center;justify-content:center;margin-bottom:26px">
+              <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,159,67,0.32),rgba(255,159,67,0) 72%)"></div>
+              <svg width="158" height="158" style="position:absolute;transform:rotate(-90deg)"><circle cx="79" cy="79" r="70" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="9"></circle><circle cx="79" cy="79" r="70" fill="none" stroke="url(#streakstartGrad)" stroke-width="9" stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="377" style="animation:lumiRingDraw 1.1s ease-out"></circle><defs><linearGradient id="streakstartGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb37a"></stop><stop offset="1" stop-color="#ff7a4d"></stop></linearGradient></defs></svg>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;animation:lumiFlamePop 0.6s ease-out 0.9s backwards">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="#ffb37a"><path d="M12.5 2c1 3-1.5 4.5-1.5 7.5 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5c1.7 1.4 3 3.7 3 6 0 3.6-2.9 6.5-6.5 6.5S6 19.1 6 15.5c0-4.2 2.8-6.5 4.3-9.2C10.8 5.2 11.4 3.5 12.5 2z"></path></svg>
+                <div style="font-size:36px;font-weight:900;color:#fff;line-height:1">1</div>
               </div>
-              <div style="position:absolute;bottom:-14px;right:-18px;width:56px;height:56px"><image-slot id="mascot-streakstart" shape="circle" placeholder="Луми: звезда празднует, огоньки серии"></image-slot></div>
             </div>
+
+            <div style="display:flex;gap:7px;margin-bottom:24px">
+              <div style="width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffb37a,#ff7a4d);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff">П</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">В</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">С</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">Ч</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">П</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">С</div>
+              <div style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#5f5580">В</div>
+            </div>
+
             <div style="font-size:13px;color:#c9c2e6;font-weight:600;text-align:center;line-height:1.5;padding:0 20px">Каждый день практики продолжает её.<br></br>Пропуск не страшен — заморозка защитит серию.</div>
-            <div style="flex:1;min-height:10px"></div>
+            <div style="flex:1;min-height:24px"></div>
             <div onClick="{{ go.home }}" style="width:100%;background:linear-gradient(135deg,#8b6cf6,#6c4fe0);border-radius:14px;padding:16px;text-align:center;font-size:15px;font-weight:800;color:#fff;cursor:pointer">Продолжить</div>
           </div>
         </sc-if>
@@ -256,7 +286,6 @@
                 <div style="background:rgba(255,159,67,0.15);border-radius:12px;padding:5px 9px;font-size:12px;color:#ffb37a;font-weight:800;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ffb37a"><path d="M12.5 2c1 3-1.5 4.5-1.5 7.5 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5c1.7 1.4 3 3.7 3 6 0 3.6-2.9 6.5-6.5 6.5S6 19.1 6 15.5c0-4.2 2.8-6.5 4.3-9.2C10.8 5.2 11.4 3.5 12.5 2z"></path></svg>7</div>
                 <div onClick="{{ go.shop }}" style="background:rgba(255,209,102,0.15);border-radius:12px;padding:5px 9px;font-size:12px;color:#ffd166;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>1230</div>
                 <div style="background:rgba(90,170,255,0.15);border-radius:12px;padding:5px 9px;font-size:12px;color:#8fc3ff;font-weight:800;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8fc3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 5l14 14M19 5L5 19"></path></svg>1/2</div>
-                <div onClick="{{ go.notifications }}" style="width:28px;height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#e5e0f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg></div>
               </div>
             </div>
             <div style="width:110px;height:110px;align-self:center"><image-slot id="mascot-home" shape="rect" placeholder="Луми: звезда в наушниках, музыкальные ноты"></image-slot></div>
@@ -664,64 +693,100 @@
         </sc-if>
 
         <sc-if value="{{ is.shop }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;gap:10px;height:100%">
+          <div style="display:flex;flex-direction:column;gap:18px;height:100%">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="font-size:19px;font-weight:900;color:#fff">Магазин</div>
+              <div style="font-size:22px;font-weight:900;color:#fff">Магазин</div>
               <div style="font-size:12px;color:#ffd166;font-weight:800;display:flex;align-items:center;gap:5px;background:rgba(255,209,102,0.12);border:1px solid rgba(255,209,102,0.3);border-radius:20px;padding:5px 10px"><svg viewBox="0 0 24 24" width="13" height="13" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>1230</div>
             </div>
-            <div style="background:linear-gradient(135deg,rgba(139,108,246,0.25),rgba(108,79,224,0.1));border:1px solid rgba(139,108,246,0.35);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px">
-              <div style="width:46px;height:46px;flex-shrink:0"><image-slot id="shop-featured" shape="circle" placeholder="Космический плащ"></image-slot></div>
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:6px"><span style="font-size:9px;font-weight:800;color:#0a0716;background:#ffd166;border-radius:6px;padding:2px 6px;letter-spacing:0.3px">ХИТ ДНЯ</span></div>
-                <div style="font-size:13px;font-weight:800;color:#fff;margin-top:4px">Космический плащ</div>
+
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,209,102,0.16);border:1.5px solid #ffd166;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="22" height="22" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg></div>
+                <div style="font-size:10.5px;color:#ffd166;font-weight:800">Популярное</div>
               </div>
-              <div style="font-size:12px;color:#ffd166;font-weight:800;display:flex;align-items:center;gap:4px;white-space:nowrap"><svg viewBox="0 0 24 24" width="11" height="11" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>90</div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c9c2e6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="3.2"></circle><circle cx="16" cy="12" r="3.2"></circle><path d="M11.2 12h1.6M4.8 12l-1.6-.6M19.2 12l1.6-.6"></path></svg></div>
+                <div style="font-size:10.5px;color:#9c93c9;font-weight:700">Аксессуары</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#c9c2e6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2 2 0 0 1 6 3h4v18H6a2 2 0 0 1-2-1.5z"></path><path d="M20 4.5A2 2 0 0 0 18 3h-4v18h4a2 2 0 0 0 2-1.5z"></path></svg></div>
+                <div style="font-size:10.5px;color:#9c93c9;font-weight:700">Техники</div>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="22" height="22" fill="#c9c2e6"><path d="M13 2L4 14h6l-1 8 9-12h-6z"></path></svg></div>
+                <div style="font-size:10.5px;color:#9c93c9;font-weight:700">Бустеры</div>
+              </div>
             </div>
-            <div style="display:flex;gap:6px;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px">
-              <div style="flex:1;text-align:center;background:#8b6cf6;border-radius:9px;padding:8px;font-size:11px;font-weight:800;color:#fff">Все</div>
-              <div style="flex:1;text-align:center;padding:8px;font-size:11px;color:#9c93c9;font-weight:700">Маскот</div>
-              <div style="flex:1;text-align:center;padding:8px;font-size:11px;color:#9c93c9;font-weight:700">Бустеры</div>
-              <div style="flex:1;text-align:center;padding:8px;font-size:11px;color:#9c93c9;font-weight:700">Техники</div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-size:15px;font-weight:800;color:#fff">Аксессуары для Луми</div>
+                <div style="font-size:11.5px;color:#8fc3ff;font-weight:700">Смотреть все</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-glasses" shape="rounded" radius="10" placeholder="Очки мечтателя"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Очки мечтателя</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>80</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-headphones" shape="rounded" radius="10" placeholder="Галактические наушники"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Галакт. наушники</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>120</div>
+                </div>
+                <div style="background:rgba(139,108,246,0.12);border:1px solid rgba(139,108,246,0.4);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-crown" shape="rounded" radius="10" placeholder="Звёздная корона"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Звёздная корона</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>100</div>
+                </div>
+              </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
-              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#c9c2e6;background:rgba(255,255,255,0.1);border-radius:6px;padding:2px 6px">обычный</div>
-                <div style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;color:#4ade80;background:rgba(74,222,128,0.15);border-radius:6px;padding:2px 6px">×2</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-1" shape="circle" placeholder="Снежинка"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">Заморозка дня</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>30</div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-size:15px;font-weight:800;color:#fff">Секретные техники</div>
+                <div style="font-size:11.5px;color:#8fc3ff;font-weight:700">Смотреть все</div>
               </div>
-              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#c9c2e6;background:rgba(255,255,255,0.1);border-radius:6px;padding:2px 6px">обычный</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-2" shape="circle" placeholder="Люмены"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">+100 Люменов</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>100</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-technique1" shape="rounded" radius="10" placeholder="Техника «Самообъятие»"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">«Самообъятие»</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>40</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-technique2" shape="rounded" radius="10" placeholder="Дневник эмоций"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Дневник эмоций</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>40</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-technique3" shape="rounded" radius="10" placeholder="Фокус на ценностях"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Фокус на ценностях</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>40</div>
+                </div>
               </div>
-              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#8fc3ff;background:rgba(143,195,255,0.15);border-radius:6px;padding:2px 6px">редкий</div>
-                <div style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;color:#ff8a8a;background:rgba(255,138,138,0.15);border-radius:6px;padding:2px 6px">24 ч</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-3" shape="circle" placeholder="Двойной опыт"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">Двойной опыт на 1 день</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>60</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-size:15px;font-weight:800;color:#fff">Бустеры</div>
+                <div style="font-size:11.5px;color:#8fc3ff;font-weight:700">Смотреть все</div>
               </div>
-              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#8fc3ff;background:rgba(143,195,255,0.15);border-radius:6px;padding:2px 6px">редкий</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-4" shape="circle" placeholder="Очки мечтателя"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">Очки мечтателя</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>80</div>
-              </div>
-              <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#c9c2e6;background:rgba(255,255,255,0.1);border-radius:6px;padding:2px 6px">обычный</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-5" shape="circle" placeholder="Ночная шапочка"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">Ночная шапочка</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>60</div>
-              </div>
-              <div style="background:rgba(139,108,246,0.1);border:1px solid rgba(139,108,246,0.35);border-radius:14px;padding:14px;text-align:center;position:relative">
-                <div style="position:absolute;top:8px;left:8px;font-size:8px;font-weight:800;color:#e0a8ff;background:rgba(224,168,255,0.15);border-radius:6px;padding:2px 6px">эпический</div>
-                <div style="position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;color:#ffd166;background:rgba(255,209,102,0.15);border-radius:6px;padding:2px 6px">NEW</div>
-                <div style="width:40px;height:40px;margin:8px auto 8px"><image-slot id="shop-6" shape="circle" placeholder="Космический плащ"></image-slot></div>
-                <div style="font-size:12px;font-weight:800;color:#fff">Космический плащ</div>
-                <div style="font-size:11px;color:#ffd166;margin-top:6px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px"><svg viewBox="0 0 24 24" width="10" height="10" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>120</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <div style="background:rgba(143,195,255,0.1);border:1px solid rgba(143,195,255,0.3);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-freeze" shape="rounded" radius="10" placeholder="Заморозка серии"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Заморозка серии</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>30</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-extra" shape="rounded" radius="10" placeholder="Доп. задание дня"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Доп. задание дня</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>30</div>
+                </div>
+                <div style="background:rgba(139,108,246,0.12);border:1px solid rgba(139,108,246,0.4);border-radius:14px;padding:10px;text-align:center">
+                  <div style="width:100%;aspect-ratio:1;margin-bottom:6px"><image-slot id="shop-hint" shape="rounded" radius="10" placeholder="Подсказка в уроке"></image-slot></div>
+                  <div style="font-size:10.5px;color:#e5e0f7;font-weight:700;line-height:1.25">Подсказка в уроке</div>
+                  <div style="font-size:11px;color:#ffd166;margin-top:5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:3px"><svg viewBox="0 0 24 24" width="9" height="9" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>20</div>
+                </div>
               </div>
             </div>
           </div>
@@ -740,48 +805,74 @@
         </sc-if>
 
         <sc-if value="{{ is.achievements }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:18px">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
-              <div style="font-size:18px;font-weight:900;color:#fff">Достижения</div>
+              <div style="font-size:22px;font-weight:900;color:#fff">Достижения</div>
               <div style="font-size:12px;color:#9c93c9;font-weight:700">2 из 8</div>
             </div>
-            <div style="height:6px;width:100%;background:rgba(255,255,255,0.08);border-radius:3px"><div style="width:25%;height:100%;background:linear-gradient(90deg,#ffd166,#ff9f43);border-radius:3px"></div></div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px;margin-top:4px">
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe29a,#ffb020 70%);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="#5c3d00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5.5"></circle><path d="M9 13.5L7 21l5-2.5L17 21l-2-7.5"></path></svg>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:13px;font-weight:800;color:#8a80b0;text-transform:uppercase;letter-spacing:0.3px">Открыто</div>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.3);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:#ffb020;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#5c3d00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5.5"></circle><path d="M9 13.5L7 21l5-2.5L17 21l-2-7.5"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#ffd166;font-weight:700;line-height:1.2;text-align:center">Первый<br></br>урок</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#fff">Первый урок</div>
+                  <div style="font-size:10.5px;color:#c9a380;margin-top:2px">Пройден первый урок в приложении</div>
+                </div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffcf94,#ff7a30 70%);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="27" height="27" fill="#5c2600"><path d="M12 2c1.2 3-2.6 4.4-2.9 7.4a2.9 2.9 0 0 0 5.8.3c0-1-.6-1.7-.9-2.6 2.3 1.2 4 3.6 4 6.4a6 6 0 0 1-12 0c0-5 4-6.6 6-11.5z"></path></svg>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,122,48,0.1);border:1px solid rgba(255,122,48,0.3);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:#ff7a30;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="#5c2600"><path d="M12 2c1.2 3-2.6 4.4-2.9 7.4a2.9 2.9 0 0 0 5.8.3c0-1-.6-1.7-.9-2.6 2.3 1.2 4 3.6 4 6.4a6 6 0 0 1-12 0c0-5 4-6.6 6-11.5z"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#ffb37a;font-weight:700;line-height:1.2;text-align:center">7 дней<br></br>подряд</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#fff">7 дней подряд</div>
+                  <div style="font-size:10.5px;color:#dba07a;margin-top:2px">Держал серию 7 дней без пропуска</div>
+                </div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:13px;font-weight:800;color:#8a80b0;text-transform:uppercase;letter-spacing:0.3px">Впереди</div>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#5c5480;font-weight:700;line-height:1.2;text-align:center">Ранняя<br></br>пташка</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#e5e0f7">Ранняя пташка</div>
+                  <div style="font-size:10.5px;color:#7a7099;margin-top:2px">Позанимайся до 9 утра — 1 / 3 раза</div>
+                  <div style="height:4px;width:100%;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:6px"><div style="width:33%;height:100%;background:#6a6088;border-radius:2px"></div></div>
+                </div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#5c5480;font-weight:700;line-height:1.2;text-align:center">Дневник<br></br>× 5</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#e5e0f7">Дневник × 5</div>
+                  <div style="font-size:10.5px;color:#7a7099;margin-top:2px">Заполни дневник эмоций — 2 / 5 раз</div>
+                  <div style="height:4px;width:100%;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:6px"><div style="width:40%;height:100%;background:#6a6088;border-radius:2px"></div></div>
+                </div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#5c5480;font-weight:700;line-height:1.2;text-align:center">Курс<br></br>пройден</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#e5e0f7">Курс пройден</div>
+                  <div style="font-size:10.5px;color:#7a7099;margin-top:2px">Заверши курс целиком — 0 / 1</div>
+                  <div style="height:4px;width:100%;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:6px"><div style="width:0%;height:100%;background:#6a6088;border-radius:2px"></div></div>
+                </div>
               </div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-                <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+              <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 13px">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6a6088" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
                 </div>
-                <div style="font-size:10px;color:#5c5480;font-weight:700;line-height:1.2;text-align:center">30 дней<br></br>подряд</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:800;color:#e5e0f7">30 дней подряд</div>
+                  <div style="font-size:10.5px;color:#7a7099;margin-top:2px">Держи серию месяц — 7 / 30</div>
+                  <div style="height:4px;width:100%;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:6px"><div style="width:23%;height:100%;background:#6a6088;border-radius:2px"></div></div>
+                </div>
               </div>
             </div>
           </div>
@@ -860,19 +951,22 @@
 
         <sc-if value="{{ is.statistics }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-direction:column;gap:12px">
-            <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:2px">Статистика</div>
+            <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:2px">Статистика</div>
             <div style="display:flex;gap:8px">
-              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center">
-                <div style="font-size:16px;font-weight:800;color:#c3b3ff">12</div>
-                <div style="font-size:9px;color:#8a80b0;font-weight:600;margin-top:2px">уроков всего</div>
+              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 8px;text-align:center">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#c3b3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:4px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <div style="font-size:20px;font-weight:900;color:#c3b3ff">12</div>
+                <div style="font-size:10px;color:#9c93c9;font-weight:700;margin-top:2px">уроков всего</div>
               </div>
-              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center">
-                <div style="font-size:16px;font-weight:800;color:#ffb37a">7</div>
-                <div style="font-size:9px;color:#8a80b0;font-weight:600;margin-top:2px">серия сейчас</div>
+              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 8px;text-align:center">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffb37a" style="margin-bottom:4px"><path d="M12.5 2c1 3-1.5 4.5-1.5 7.5 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5c1.7 1.4 3 3.7 3 6 0 3.6-2.9 6.5-6.5 6.5S6 19.1 6 15.5c0-4.2 2.8-6.5 4.3-9.2C10.8 5.2 11.4 3.5 12.5 2z"></path></svg>
+                <div style="font-size:20px;font-weight:900;color:#ffb37a">7</div>
+                <div style="font-size:10px;color:#c9a380;font-weight:700;margin-top:2px">серия сейчас</div>
               </div>
-              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center">
-                <div style="font-size:16px;font-weight:800;color:#ffd166">14</div>
-                <div style="font-size:9px;color:#8a80b0;font-weight:600;margin-top:2px">лучшая серия</div>
+              <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 8px;text-align:center">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffd166" style="margin-bottom:4px"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>
+                <div style="font-size:20px;font-weight:900;color:#ffd166">14</div>
+                <div style="font-size:10px;color:#c9b380;font-weight:700;margin-top:2px">лучшая серия</div>
               </div>
             </div>
 
@@ -958,8 +1052,8 @@
         </sc-if>
 
         <sc-if value="{{ is.streak }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
-            <div style="font-size:18px;font-weight:900;color:#fff">Серия дней</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:22px">
+            <div style="font-size:24px;font-weight:900;color:#fff">Серия дней</div>
             <div style="position:relative;width:150px;height:150px;display:flex;align-items:center;justify-content:center">
               <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,159,67,0.28),rgba(255,159,67,0) 72%)"></div>
               <svg width="150" height="150" style="position:absolute;transform:rotate(-90deg)"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"></circle><circle cx="75" cy="75" r="66" fill="none" stroke="url(#streakGrad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="103.7"></circle><defs><linearGradient id="streakGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb37a"></stop><stop offset="1" stop-color="#ff7a4d"></stop></linearGradient></defs></svg>
@@ -973,7 +1067,7 @@
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Пн</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:linear-gradient(135deg,#8b6cf6,#6c4fe0);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg></div></div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Вт</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:linear-gradient(135deg,#8b6cf6,#6c4fe0);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg></div></div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Ср</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:linear-gradient(135deg,#8b6cf6,#6c4fe0);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg></div></div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Чт</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:linear-gradient(135deg,#8b6cf6,#6c4fe0);display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L19 7"></path></svg></div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#8fc3ff;font-weight:800">Чт</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:rgba(143,195,255,0.18);border:2px solid #8fc3ff;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#8fc3ff" stroke-width="2.4" stroke-linecap="round"><path d="M12 2v20M5 5l14 14M19 5L5 19"></path></svg></div></div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#ffb37a;font-weight:800">Пт</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:rgba(255,159,67,0.15);border:2px solid #ffb37a;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="12" height="12" fill="#ffb37a"><path d="M12.5 2c1 3-1.5 4.5-1.5 7.5 0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5c1.7 1.4 3 3.7 3 6 0 3.6-2.9 6.5-6.5 6.5S6 19.1 6 15.5c0-4.2 2.8-6.5 4.3-9.2C10.8 5.2 11.4 3.5 12.5 2z"></path></svg></div></div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Сб</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18)"></div></div>
               <div style="display:flex;flex-direction:column;align-items:center;gap:5px"><div style="font-size:9px;color:#6a6088;font-weight:700">Вс</div><div style="width:100%;aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,0.05);border:1.5px dashed rgba(255,255,255,0.18)"></div></div>
@@ -981,6 +1075,20 @@
             <div style="width:100%;background:rgba(143,195,255,0.1);border:1px solid rgba(143,195,255,0.25);border-radius:14px;padding:13px;display:flex;align-items:center;gap:11px">
               <div style="width:36px;height:36px;border-radius:10px;background:rgba(143,195,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#8fc3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M5 5l14 14M19 5L5 19"></path></svg></div>
               <div><div style="font-size:13px;font-weight:800;color:#fff">Заморозки: 2</div><div style="font-size:10.5px;color:#8fa0c9;margin-top:1px">Сохранят серию, если пропустишь день</div></div>
+            </div>
+            <div style="display:flex;gap:10px;width:100%">
+              <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;text-align:center">
+                <div style="font-size:20px;font-weight:900;color:#fff">7</div>
+                <div style="font-size:10.5px;color:#8a80b0;font-weight:600;margin-top:2px">текущая серия</div>
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;text-align:center">
+                <div style="font-size:20px;font-weight:900;color:#fff">7</div>
+                <div style="font-size:10.5px;color:#8a80b0;font-weight:600;margin-top:2px">рекорд</div>
+              </div>
+              <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px;text-align:center">
+                <div style="font-size:20px;font-weight:900;color:#fff">42</div>
+                <div style="font-size:10.5px;color:#8a80b0;font-weight:600;margin-top:2px">всего дней</div>
+              </div>
             </div>
           </div>
         </sc-if>
@@ -1117,6 +1225,8 @@
 class Component extends DCLogic {
   state = { screen: 'welcome', history: ['welcome'], ex3Checked: false, ex3Drag: 0, ex3Dragging: false, widgetStreak: false };
 
+
+
   setWidgetNormal = () => this.setState({ widgetStreak: false });
   setWidgetStreak = () => this.setState({ widgetStreak: true });
 
@@ -1173,7 +1283,7 @@ class Component extends DCLogic {
     const widgetTabStreakStyle = tabBase + (this.state.widgetStreak ? 'background:#8b6cf6;color:#fff;' : 'color:#9c93c9;');
 
     const showTabBar = ['home','catalog','profile'].includes(s);
-    const excludedBack = ['splash','welcome','disclaimer','ob1','ob2','ob3','ob4','planloading','obtrack','home','catalog','profile'];
+    const excludedBack = ['splash','welcome','disclaimer','ob1','ob2','ob3','ob4','planloading','obtrack','streakstart','home','catalog','profile','shop'];
     const showBack = !excludedBack.includes(s);
 
     const checkEx3 = () => { if (!this.state.ex3Checked) this.setState({ ex3Checked: true }); else this.goTo('ex4'); };
