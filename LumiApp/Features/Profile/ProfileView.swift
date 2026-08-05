@@ -20,6 +20,13 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    NavigationLink("Инвентарь") { InventoryView() }
+                    NavigationLink("Статистика") { StatisticsView() }
+                    NavigationLink("Достижения") { AchievementsView() }
+                    NavigationLink("Уведомления") { NotificationsView() }
+                }
+
+                Section {
                     NavigationLink("Магазин") { ShopView() }
                     NavigationLink("Настройки") { SettingsView() }
                     NavigationLink("Кризисные ресурсы") { CrisisSupportView() }

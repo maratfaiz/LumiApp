@@ -70,6 +70,10 @@ struct LessonPlayerView: View {
         if !existing.completedLessonIDs.contains(lesson.id) {
             existing.completedLessonIDs.append(lesson.id)
         }
+        StreakEngine.recordLessonCompletion(on: existing)
+        if Calendar.current.component(.hour, from: .now) < 9 {
+            existing.earlyBirdLessonCount += 1
+        }
         if Set(course.lessons.map(\.id)).isSubset(of: Set(existing.completedLessonIDs)) {
             existing.lumens += GamificationRules.lumensBonusPerCourseCompletion
         }
