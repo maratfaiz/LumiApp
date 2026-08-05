@@ -1,6 +1,12 @@
+import AuthenticationServices
 import SwiftUI
 
-/// F1 — logo, mascot, one-line pitch, "Начать" button.
+/// F1+F2 merged per Lumi_Functional_Requirements.docx v2.0: "Экран знакомства
+/// и регистрация объединены" — single mandatory entry point, Sign in with
+/// Apple only (no email/password, no guest mode, cannot be skipped).
+/// Real credential handling still needs a backend (Stage 5 architecture,
+/// per Lumi_Project_Handover.docx, is still open) — onCompletion just
+/// advances for now.
 struct WelcomeView: View {
     let onContinue: () -> Void
 
@@ -11,15 +17,23 @@ struct WelcomeView: View {
                 .frame(width: 160, height: 160)
             Text("Луми")
                 .font(.lumiTitle)
-            Text("Короткие ежедневные занятия для здоровой самооценки")
+            Text("Каждый день чуть ближе к себе")
                 .font(.lumiBody)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 32)
             Spacer()
-            Button("Начать", action: onContinue)
-                .buttonStyle(.borderedProminent)
-                .tint(LumiColor.accent)
+            SignInWithAppleButton(.continue) { request in
+                request.requestedScopes = [.fullName]
+            } onCompletion: { _ in
+                onContinue()
+            }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 50)
+            .padding(.horizontal, 32)
+            Text("Продолжая, вы соглашаетесь с условиями использования")
+                .font(.lumiCaption)
+                .foregroundStyle(.secondary)
                 .padding(.bottom, 32)
         }
     }

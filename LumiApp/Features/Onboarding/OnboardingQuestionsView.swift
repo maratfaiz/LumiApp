@@ -41,8 +41,8 @@ struct OnboardingQuestionsView: View {
 
     private var formatQuestion: some View {
         QuestionScaffold(title: "Какой формат тебе удобнее?") {
-            ForEach(["Тексты", "Аудио", "Интерактив"], id: \.self) { format in
-                Button(format) {
+            ForEach(PreferredFormat.allCases) { format in
+                Button(format.rawValue) {
                     viewModel.preferredFormat = format
                     page = 3
                 }

@@ -35,7 +35,8 @@ struct OnboardingPlanView: View {
     private func grantOnboardingRewardsAndFinish() {
         let progress = UserProgress(
             streakFreezesAvailable: GamificationRules.freeFreezeOnOnboardingComplete,
-            currentCourseID: course?.id
+            currentCourseID: course?.id,
+            preferredFormatRawValue: viewModel.preferredFormat?.rawValue
         )
         modelContext.insert(progress)
         onFinished()
