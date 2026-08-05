@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body { margin:0; background:#0d0b22; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0d0b22;padding:40px 32px 80px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:6px">Предметы для магазина Луми</div>
+    <div style="font-size:14px;color:#9c93c9;margin-bottom:36px;line-height:1.5">Все образы/аксессуары, которые Луми может надеть. Нужна отдельная иллюстрация Луми в каждом образе (или сам предмет отдельно) — квадрат, прозрачный/тёмный фон, светло-фиолетовая палитра персонажа.</div>
+
+    <sc-for list="{{ groups }}" as="group" hint-placeholder-count="3">
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:15px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:0.5px">{{ group.title }}</div>
+          <div style="font-size:11px;font-weight:800;color:{{ group.color }};background:{{ group.color }}22;border-radius:8px;padding:3px 9px">{{ group.badge }}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+          <sc-for list="{{ group.items }}" as="item" hint-placeholder-count="3">
+            <div style="background:rgba(255,255,255,0.04);border:1.5px solid {{ group.color }}55;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:14px;font-weight:800;color:#fff">{{ item.name }}</div>
+              <div style="font-size:12px;color:#9c93c9;line-height:1.4;flex:1">{{ item.desc }}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+                <div style="font-size:11px;font-weight:700;color:{{ group.color }}">{{ item.tag }}</div>
+                <sc-if value="{{ item.price }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#ffd166;font-weight:800;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" width="11" height="11" fill="#ffd166"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7-5.4-4.7 7.1-.7z"></path></svg>{{ item.price }}</div></sc-if>
+                <sc-if value="{{ item.lessonsReq }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:#8fc3ff;font-weight:800">{{ item.lessonsReq }} уроков</div></sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const it = (name, desc, tag, extra) => ({ name, desc, tag, ...extra });
+    return {
+      groups: [
+        {
+          title: 'База', badge: 'Бесплатно', color: '#9c93c9',
+          items: [
+            it('Без образа', 'Луми в естественном виде, без аксессуаров — дефолтный вид', 'Базовый'),
+            it('Кепка', 'Простая кепка на "макушке" звезды, повседневный акксессуар', 'Базовый', { price: 400 }),
+          ],
+        },
+        {
+          title: 'Редкие', badge: 'За люмены', color: '#5aa9ff',
+          items: [
+            it('Очки мечтателя', 'Круглые прозрачные очки со звёздным отблеском в стёклах', 'Редкий', { price: 80 }),
+            it('Галакт. наушники', 'Наушники со светящимся фиолетовым ободком, звёздный узор', 'Редкий', { price: 120 }),
+            it('Плащ путешественника', 'Короткий плащ со звёздами на подкладке, развевается', 'Редкий', { price: 200 }),
+          ],
+        },
+        {
+          title: 'Особые', badge: 'За люмены / за уроки', color: '#a97bff',
+          items: [
+            it('Звёздная корона', 'Маленькая светящаяся корона из острых лучей на макушке', 'Эпический', { price: 100 }),
+            it('Костюм космонавта', 'Полный костюм скафандра с прозрачным шлемом-пузырём', 'Эпический', { lessonsReq: 20 }),
+            it('Мантия волшебника', 'Тёмно-фиолетовая мантия со звёздами и остроконечным капюшоном', 'Эпический', { lessonsReq: 30 }),
+            it('Талисман удачи', 'Небольшой светящийся кулон-подвеска в форме клевера/звезды на шее', 'Эпический', { lessonsReq: 40 }),
+          ],
+        },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
