@@ -16,6 +16,7 @@ final class UserProgress {
     var unlockedMascotSkinIDs: [String]
     var equippedMascotSkinID: String?
     var unlockedSecretTechniqueIDs: [String]
+    var favoriteAffirmationIDs: [String]
     var extraDailyTaskTokens: Int
     /// F13 booster — deliberate pay-to-win exception (Product Owner
     /// decision, see ShopCatalog.swift). Consumption in LessonPlayerView
@@ -41,6 +42,7 @@ final class UserProgress {
         unlockedMascotSkinIDs: [String] = [],
         equippedMascotSkinID: String? = nil,
         unlockedSecretTechniqueIDs: [String] = [],
+        favoriteAffirmationIDs: [String] = [],
         extraDailyTaskTokens: Int = 0,
         lessonHintTokens: Int = 0,
         preferredFormatRawValue: String? = nil,
@@ -57,6 +59,7 @@ final class UserProgress {
         self.unlockedMascotSkinIDs = unlockedMascotSkinIDs
         self.equippedMascotSkinID = equippedMascotSkinID
         self.unlockedSecretTechniqueIDs = unlockedSecretTechniqueIDs
+        self.favoriteAffirmationIDs = favoriteAffirmationIDs
         self.extraDailyTaskTokens = extraDailyTaskTokens
         self.lessonHintTokens = lessonHintTokens
         self.preferredFormatRawValue = preferredFormatRawValue

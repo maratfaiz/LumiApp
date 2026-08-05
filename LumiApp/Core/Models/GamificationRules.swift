@@ -6,6 +6,8 @@ enum GamificationRules {
     static let xpPerLesson = 10
     static let lumensPerLesson = 10
     static let lumensBonusPerCourseCompletion = 50
+    /// F26/F27/F29 — Дыхание, Аффирмации, Медитация all reward lumens only, no XP.
+    static let lumensPerModeSession = 15
 
     /// XP threshold to *reach* each level. Index 0 is level 1 (always unlocked).
     static let levelThresholds = [0, 30, 70, 120, 180]
