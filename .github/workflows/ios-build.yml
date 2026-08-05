@@ -23,16 +23,7 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build
-        run: |
-          set -o pipefail
-          xcodebuild build \
-            -project LumiApp.xcodeproj \
-            -scheme LumiApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-            | xcbeautify
-
-      - name: Test
+      - name: Build and test
         run: |
           set -o pipefail
           xcodebuild test \
