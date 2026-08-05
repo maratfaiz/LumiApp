@@ -15,7 +15,7 @@ struct LessonPlayerView: View {
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
-    @State private var exerciseText = ""
+    @State private var answerText = ""
     @State private var showCompletion = false
     @State private var showCrisisSupport = false
 
@@ -28,9 +28,7 @@ struct LessonPlayerView: View {
                 Text(lesson.explanation).font(.lumiBody)
 
                 Text(lesson.exercisePrompt).font(.lumiHeadline)
-                TextEditor(text: $exerciseText)
-                    .frame(height: 120)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                ExercisePlayerView(kind: lesson.exerciseKind, prompt: lesson.exercisePrompt, answerText: $answerText)
 
                 if !lesson.example.isEmpty && lesson.example != "TODO" {
                     Text("Пример: \(lesson.example)")
@@ -41,7 +39,7 @@ struct LessonPlayerView: View {
                 Button("Завершить", action: submit)
                     .buttonStyle(.borderedProminent)
                     .tint(LumiColor.accent)
-                    .disabled(exerciseText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding()
         }
@@ -54,7 +52,7 @@ struct LessonPlayerView: View {
     }
 
     private func submit() {
-        if crisisDetector.isCrisisSignal(in: exerciseText) {
+        if crisisDetector.isCrisisSignal(in: answerText) {
             // No XP/lumens/streak impact — gamification stops entirely for this interaction.
             showCrisisSupport = true
             return

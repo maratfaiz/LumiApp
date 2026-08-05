@@ -12,6 +12,7 @@ struct Lesson: Identifiable, Codable, Hashable {
     let exercisePrompt: String
     let example: String
     let mascotMessage: String
+    var exerciseKind: ExerciseKind = .freeText
 }
 
 /// A course is identified by its MVP number, not its position in the list —

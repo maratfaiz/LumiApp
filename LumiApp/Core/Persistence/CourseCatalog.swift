@@ -6,6 +6,10 @@ import Foundation
 /// TODO: replace this hardcoded catalog with a proper import step (e.g. a
 /// build-time script that parses Lumi_Course_Content.docx into JSON) once
 /// content is finalized — courses 2 and 5 aren't transcribed here yet.
+/// All 10 F8 exercise mechanics are implemented (ExercisePlayerView.swift)
+/// and ready to assign per-lesson via `Lesson.exerciseKind`; every stub
+/// lesson here still defaults to `.freeText` since no real content exists
+/// yet to justify picking one mechanic over another for it.
 enum CourseCatalog {
     static let courses: [Course] = [
         Course(
