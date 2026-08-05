@@ -12,6 +12,7 @@ enum PersistenceController {
         }
     }
 
+    @MainActor
     static func makePreviewContainer() -> ModelContainer {
         let schema = Schema([UserProgress.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
