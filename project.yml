@@ -43,7 +43,6 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lumi.app
-        PRODUCT_NAME: Lumi
     dependencies: []
 
   LumiAppTests:
