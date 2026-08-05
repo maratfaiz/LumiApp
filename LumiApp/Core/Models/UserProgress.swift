@@ -14,6 +14,13 @@ final class UserProgress {
     var currentCourseID: String?
     var completedLessonIDs: [String]
     var unlockedMascotSkinIDs: [String]
+    var equippedMascotSkinID: String?
+    var unlockedSecretTechniqueIDs: [String]
+    var extraDailyTaskTokens: Int
+    /// F13 booster — deliberate pay-to-win exception (Product Owner
+    /// decision, see ShopCatalog.swift). Consumption in LessonPlayerView
+    /// isn't wired yet.
+    var lessonHintTokens: Int
     /// Q3 onboarding answer, raw PreferredFormat.rawValue. Only controls
     /// which mode tiles (Дыхание/Аффирмации/Медитация) surface on Home —
     /// never gates access, the user can always reach every mode.
@@ -32,6 +39,10 @@ final class UserProgress {
         currentCourseID: String? = nil,
         completedLessonIDs: [String] = [],
         unlockedMascotSkinIDs: [String] = [],
+        equippedMascotSkinID: String? = nil,
+        unlockedSecretTechniqueIDs: [String] = [],
+        extraDailyTaskTokens: Int = 0,
+        lessonHintTokens: Int = 0,
         preferredFormatRawValue: String? = nil,
         userDisplayName: String? = nil
     ) {
@@ -44,6 +55,10 @@ final class UserProgress {
         self.currentCourseID = currentCourseID
         self.completedLessonIDs = completedLessonIDs
         self.unlockedMascotSkinIDs = unlockedMascotSkinIDs
+        self.equippedMascotSkinID = equippedMascotSkinID
+        self.unlockedSecretTechniqueIDs = unlockedSecretTechniqueIDs
+        self.extraDailyTaskTokens = extraDailyTaskTokens
+        self.lessonHintTokens = lessonHintTokens
         self.preferredFormatRawValue = preferredFormatRawValue
         self.userDisplayName = userDisplayName
     }

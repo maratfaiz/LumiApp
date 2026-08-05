@@ -12,7 +12,9 @@ enum GamificationRules {
 
     static let streakFreezePriceLumens = 30
     static let secretTechniquePriceLumens = 40
-    static let mascotSkinPriceRange = 50...150
+    /// Common/rare accessories only — epic accessories unlock by lessons
+    /// completed instead (20/30/40), never by lumens. See ShopCatalog.swift.
+    static let accessoryPriceRange = 80...200
 
     static let maxStoredStreakFreezes = 2
     static let freeFreezeOnOnboardingComplete = 1
