@@ -31,7 +31,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header
                     NavigationLink(destination: WardrobeView()) {
-                        MascotView(state: .neutral)
+                        EquippedMascotView()
                             .frame(width: 150, height: 150)
                             .frame(maxWidth: .infinity)
                     }

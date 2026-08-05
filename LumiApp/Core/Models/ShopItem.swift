@@ -12,10 +12,12 @@ enum ShopCategory: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-enum AccessoryRarity: String, Codable {
+enum AccessoryRarity: String, Codable, CaseIterable, Identifiable, Hashable {
     case common = "Обычный"
     case rare = "Редкий"
     case epic = "Эпический"
+
+    var id: String { rawValue }
 }
 
 /// How an item is unlocked. Accessories are lumens OR lessons-completed,
