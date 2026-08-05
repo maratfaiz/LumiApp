@@ -16,7 +16,9 @@ struct OnboardingPlanView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            MascotView(state: .achievement)
+            Image("mascot-obtrack")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 140, height: 140)
             Text("Начнём с курса «\(course?.title ?? "")»")
                 .font(.lumiHeadline)

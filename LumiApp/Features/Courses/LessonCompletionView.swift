@@ -9,7 +9,9 @@ struct LessonCompletionView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            MascotView(state: .success)
+            Image("mascot-lessoncomplete")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 140, height: 140)
             Text(lesson.mascotMessage.isEmpty || lesson.mascotMessage == "TODO"
                  ? "Отличная работа!"

@@ -24,8 +24,11 @@ struct MeditationView: View {
                     .rotationEffect(.degrees(-90))
                     .animation(.linear(duration: 1), value: viewModel.progress)
                 VStack(spacing: 4) {
-                    MascotView(state: viewModel.isSessionComplete ? .success : .neutral)
-                        .frame(width: 60, height: 60)
+                    if viewModel.isSessionComplete {
+                        Image("mascot-meditationcomplete").resizable().scaledToFit().frame(width: 60, height: 60)
+                    } else {
+                        MascotView(state: .neutral).frame(width: 60, height: 60)
+                    }
                     Text(timeLabel)
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .monospacedDigit()

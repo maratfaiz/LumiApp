@@ -92,6 +92,7 @@ struct AffirmationsView: View {
 
     private var completionBanner: some View {
         VStack(spacing: 8) {
+            Image("mascot-affirmcomplete").resizable().scaledToFit().frame(width: 70, height: 70)
             Text("Ты прошёл(ла) всю колоду!").font(.lumiBody.bold())
             Text("+15 люменов").font(.lumiCaption).foregroundStyle(LumiColor.accent)
         }

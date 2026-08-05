@@ -14,7 +14,9 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 24) {
             Spacer()
-            MascotView(state: .neutral)
+            Image("mascot-welcome")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 160, height: 160)
             Text("Луми")
                 .font(.lumiTitle)

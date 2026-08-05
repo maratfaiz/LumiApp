@@ -67,8 +67,11 @@ struct BreathingView: View {
                 .stroke(LumiColor.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.1), value: viewModel.progressWithinPhase)
-            MascotView(state: viewModel.isSessionComplete ? .success : .neutral)
-                .frame(width: 90, height: 90)
+            if viewModel.isSessionComplete {
+                Image("mascot-breathcomplete").resizable().scaledToFit().frame(width: 90, height: 90)
+            } else {
+                MascotView(state: .neutral).frame(width: 90, height: 90)
+            }
         }
         .frame(width: 200, height: 200)
     }
