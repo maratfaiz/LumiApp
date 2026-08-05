@@ -40,9 +40,35 @@ targets:
       path: LumiApp/LumiApp.entitlements
       properties:
         com.apple.developer.applesignin: [Default]
+        com.apple.security.application-groups: [group.com.lumi.app.shared]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lumi.app
+    dependencies:
+      - target: LumiWidgetExtension
+        embed: true
+
+  LumiWidgetExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: LumiWidget
+      - path: LumiApp/Core/Models/UserProgress.swift
+      - path: LumiApp/Core/Models/GamificationRules.swift
+      - path: LumiApp/Core/Persistence/AppGroup.swift
+      - path: LumiApp/Core/Persistence/PersistenceController.swift
+    info:
+      path: LumiWidget/Info.plist
+    entitlements:
+      path: LumiWidget/LumiWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.lumi.app.shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lumi.app.widget
+        PRODUCT_NAME: LumiWidgetExtension
+        GENERATE_INFOPLIST_FILE: false
     dependencies: []
 
   LumiAppTests:
