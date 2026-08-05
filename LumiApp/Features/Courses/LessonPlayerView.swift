@@ -63,20 +63,42 @@ struct LessonPlayerView: View {
             modelContext.insert(new)
             return new
         }()
-        existing.xp += GamificationRules.xpPerLesson
-        existing.lumens += GamificationRules.lumensPerLesson
-        if !existing.completedLessonIDs.contains(lesson.id) {
-            existing.completedLessonIDs.append(lesson.id)
-        }
+
+        // Streak counts as "showed up today" even on a replay; XP/lumens
+        // below must NOT re-trigger on replay — this used to let you
+        // infinite-farm currency by resubmitting an already-completed lesson.
+        let isFirstCompletion = !existing.completedLessonIDs.contains(lesson.id)
         StreakEngine.recordLessonCompletion(on: existing)
-        if Calendar.current.component(.hour, from: .now) < 9 {
-            existing.earlyBirdLessonCount += 1
-        }
-        if Set(course.lessons.map(\.id)).isSubset(of: Set(existing.completedLessonIDs)) {
-            existing.lumens += GamificationRules.lumensBonusPerCourseCompletion
+
+        if isFirstCompletion {
+            existing.xp += GamificationRules.xpPerLesson
+            existing.lumens += GamificationRules.lumensPerLesson
+            existing.completedLessonIDs.append(lesson.id)
+            if Calendar.current.component(.hour, from: .now) < 9 {
+                existing.earlyBirdLessonCount += 1
+            }
+
+            let courseLessonIDs = Set(course.lessons.map(\.id))
+            if courseLessonIDs.isSubset(of: Set(existing.completedLessonIDs)) {
+                existing.lumens += GamificationRules.lumensBonusPerCourseCompletion
+                advanceToNextCourse(existing)
+            }
         }
 
         showCompletion = true
+    }
+
+    /// Home shows `currentCourseID`'s next incomplete lesson — without this,
+    /// finishing a course's last lesson would leave Home stuck pointing at
+    /// that same finished course forever.
+    private func advanceToNextCourse(_ progress: UserProgress) {
+        guard progress.currentCourseID == course.id else { return }
+        let next = CourseCatalog.courses
+            .filter { $0.number > course.number }
+            .min { $0.number < $1.number }
+        if let next {
+            progress.currentCourseID = next.id
+        }
     }
 }
 

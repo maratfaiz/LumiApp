@@ -11,7 +11,15 @@ struct CourseDetailView: View {
         List(course.lessons) { lesson in
             NavigationLink(value: lesson) {
                 HStack {
-                    Text(lesson.title)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(lesson.title).font(.lumiBody)
+                        if !lesson.goal.isEmpty && lesson.goal != "TODO" {
+                            Text(lesson.goal)
+                                .font(.lumiCaption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
                     Spacer()
                     if let progress, progress.completedLessonIDs.contains(lesson.id) {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)

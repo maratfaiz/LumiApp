@@ -19,6 +19,13 @@ struct LessonCompletionView: View {
                 .font(.lumiHeadline)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+            if !lesson.result.isEmpty && lesson.result != "TODO" {
+                Text(lesson.result)
+                    .font(.lumiCaption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
             Text("+\(GamificationRules.xpPerLesson) XP · +\(GamificationRules.lumensPerLesson) люменов")
                 .font(.lumiBody)
                 .foregroundStyle(.secondary)
