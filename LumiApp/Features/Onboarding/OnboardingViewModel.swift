@@ -45,6 +45,8 @@ final class OnboardingViewModel {
     var problemArea: ProblemArea?
     var preferredFormat: PreferredFormat?
     var goal: String?
+    /// Captured from Sign in with Apple's .fullName scope, if granted.
+    var userDisplayName: String?
 
     /// Q1 <= 2 always forces course 0, overriding the Q2 answer entirely.
     var recommendedCourseNumber: Int {

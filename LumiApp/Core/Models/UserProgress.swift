@@ -18,6 +18,9 @@ final class UserProgress {
     /// which mode tiles (Дыхание/Аффирмации/Медитация) surface on Home —
     /// never gates access, the user can always reach every mode.
     var preferredFormatRawValue: String?
+    /// Given name captured from the Sign in with Apple .fullName scope, if
+    /// the user granted it (Apple only returns it on the very first auth).
+    var userDisplayName: String?
 
     init(
         xp: Int = 0,
@@ -29,7 +32,8 @@ final class UserProgress {
         currentCourseID: String? = nil,
         completedLessonIDs: [String] = [],
         unlockedMascotSkinIDs: [String] = [],
-        preferredFormatRawValue: String? = nil
+        preferredFormatRawValue: String? = nil,
+        userDisplayName: String? = nil
     ) {
         self.xp = xp
         self.lumens = lumens
@@ -41,6 +45,7 @@ final class UserProgress {
         self.completedLessonIDs = completedLessonIDs
         self.unlockedMascotSkinIDs = unlockedMascotSkinIDs
         self.preferredFormatRawValue = preferredFormatRawValue
+        self.userDisplayName = userDisplayName
     }
 
     var level: Int { GamificationRules.level(forXP: xp) }

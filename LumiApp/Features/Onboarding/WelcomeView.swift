@@ -6,8 +6,9 @@ import SwiftUI
 /// Apple only (no email/password, no guest mode, cannot be skipped).
 /// Real credential handling still needs a backend (Stage 5 architecture,
 /// per Lumi_Project_Handover.docx, is still open) — onCompletion just
-/// advances for now.
+/// captures the display name (if Apple grants it) and advances.
 struct WelcomeView: View {
+    var viewModel: OnboardingViewModel
     let onContinue: () -> Void
 
     var body: some View {
@@ -25,7 +26,12 @@ struct WelcomeView: View {
             Spacer()
             SignInWithAppleButton(.continue) { request in
                 request.requestedScopes = [.fullName]
-            } onCompletion: { _ in
+            } onCompletion: { result in
+                if case .success(let authorization) = result,
+                   let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                   let givenName = credential.fullName?.givenName {
+                    viewModel.userDisplayName = givenName
+                }
                 onContinue()
             }
             .signInWithAppleButtonStyle(.black)
@@ -40,5 +46,5 @@ struct WelcomeView: View {
 }
 
 #Preview {
-    WelcomeView(onContinue: {})
+    WelcomeView(viewModel: OnboardingViewModel(), onContinue: {})
 }
