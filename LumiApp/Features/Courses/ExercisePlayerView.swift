@@ -32,6 +32,10 @@ struct ExercisePlayerView: View {
             ActionAndTimeExercise(actionOptions: actionOptions, answerText: $answerText)
         case .values(let valueOptions):
             ValuesExercise(valueOptions: valueOptions, answerText: $answerText)
+        case .multiSlider(let labels):
+            MultiSliderExercise(labels: labels, answerText: $answerText)
+        case .multiPartReflection(let labels):
+            MultiPartReflectionExercise(labels: labels, answerText: $answerText)
         }
     }
 }
@@ -349,5 +353,96 @@ private struct ValuesExercise: View {
             return
         }
         answerText = "\(selectedValue): \(trimmedSituation)"
+    }
+}
+
+// MARK: - 11. Оцени несколько областей (1–5)
+
+private struct MultiSliderExercise: View {
+    let labels: [String]
+    @Binding var answerText: String
+    @State private var values: [Double]
+
+    init(labels: [String], answerText: Binding<String>) {
+        self.labels = labels
+        self._answerText = answerText
+        self._values = State(initialValue: Array(repeating: 3.0, count: labels.count))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            ForEach(labels.indices, id: \.self) { index in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(labels[index]).font(.lumiBody)
+                        Spacer()
+                        Text("\(Int(values[index]))/5")
+                            .font(.lumiCaption.bold())
+                            .foregroundStyle(LumiColor.accent)
+                    }
+                    Slider(
+                        value: Binding(
+                            get: { values[index] },
+                            set: { newValue in
+                                values[index] = newValue
+                                recompute()
+                            }
+                        ),
+                        in: 1...5,
+                        step: 1
+                    )
+                    .tint(LumiColor.accent)
+                }
+            }
+        }
+        .onAppear { recompute() }
+    }
+
+    private func recompute() {
+        answerText = zip(labels, values).map { "\($0): \(Int($1))" }.joined(separator: ", ")
+    }
+}
+
+// MARK: - 12. Ответь по нескольким пунктам
+
+private struct MultiPartReflectionExercise: View {
+    let labels: [String]
+    @Binding var answerText: String
+    @State private var texts: [String]
+
+    init(labels: [String], answerText: Binding<String>) {
+        self.labels = labels
+        self._answerText = answerText
+        self._texts = State(initialValue: Array(repeating: "", count: labels.count))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ForEach(labels.indices, id: \.self) { index in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(labels[index]).font(.lumiCaption).foregroundStyle(.secondary)
+                    TextEditor(
+                        text: Binding(
+                            get: { texts[index] },
+                            set: { newValue in
+                                texts[index] = newValue
+                                recompute()
+                            }
+                        )
+                    )
+                    .frame(height: 70)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                }
+            }
+        }
+    }
+
+    private func recompute() {
+        let trimmed = texts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard !trimmed.contains(where: \.isEmpty) else {
+            answerText = ""
+            return
+        }
+        answerText = zip(labels, trimmed).map { "\($0): \($1)" }.joined(separator: " | ")
     }
 }

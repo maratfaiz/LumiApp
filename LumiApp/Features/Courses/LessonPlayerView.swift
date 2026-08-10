@@ -21,9 +21,35 @@ struct LessonPlayerView: View {
 
     private let crisisDetector = CrisisDetector()
 
+    /// Reuses the prototype's own per-mechanic mascot pose
+    /// (docs/design/prototype/assets/mascot-ex1..ex10.png, already in
+    /// Assets.xcassets) so each exercise type visually matches how it
+    /// looked in Lumi_Prototype.dc.html, instead of one static image.
+    private var mascotAssetName: String {
+        switch lesson.exerciseKind {
+        case .freeText: return "mascot-lesson"
+        case .choiceOrCustom: return "mascot-ex1"
+        case .factOrJudgment: return "mascot-ex3"
+        case .rewriteAsFact: return "mascot-ex4"
+        case .defusion: return "mascot-ex5a"
+        case .letterToFriendThenSelf: return "mascot-ex6"
+        case .matching: return "mascot-ex7"
+        case .supportLetter: return "mascot-ex8"
+        case .actionAndTime: return "mascot-ex9"
+        case .values: return "mascot-ex10"
+        case .multiSlider, .multiPartReflection: return "mascot-ex2"
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                Image(mascotAssetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 110, height: 110)
+                    .frame(maxWidth: .infinity)
+
                 Text(lesson.title).font(.lumiTitle)
                 Text(lesson.explanation).font(.lumiBody)
 
