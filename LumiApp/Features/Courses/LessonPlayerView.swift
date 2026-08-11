@@ -37,7 +37,9 @@ struct LessonPlayerView: View {
         case .supportLetter: return "mascot-ex8"
         case .actionAndTime: return "mascot-ex9"
         case .values: return "mascot-ex10"
-        case .multiSlider, .multiPartReflection: return "mascot-ex2"
+        case .multiSlider, .multiPartReflection, .ratingWithReflection: return "mascot-ex2"
+        case .taggedThought: return "mascot-ex5a"
+        case .freeTextWithTimePicker: return "mascot-ex9"
         }
     }
 

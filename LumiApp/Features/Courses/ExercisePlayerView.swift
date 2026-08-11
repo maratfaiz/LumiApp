@@ -36,6 +36,12 @@ struct ExercisePlayerView: View {
             MultiSliderExercise(labels: labels, answerText: $answerText)
         case .multiPartReflection(let labels):
             MultiPartReflectionExercise(labels: labels, answerText: $answerText)
+        case .ratingWithReflection(let scaleLabel, let reflectionLabel):
+            RatingWithReflectionExercise(scaleLabel: scaleLabel, reflectionLabel: reflectionLabel, answerText: $answerText)
+        case .taggedThought(let suffix):
+            TaggedThoughtExercise(suffix: suffix, answerText: $answerText)
+        case .freeTextWithTimePicker(let timeLabel):
+            FreeTextWithTimePickerExercise(timeLabel: timeLabel, answerText: $answerText)
         }
     }
 }
@@ -444,5 +450,106 @@ private struct MultiPartReflectionExercise: View {
             return
         }
         answerText = zip(labels, trimmed).map { "\($0): \($1)" }.joined(separator: " | ")
+    }
+}
+
+// MARK: - 13. Оценка + размышление
+
+private struct RatingWithReflectionExercise: View {
+    let scaleLabel: String
+    let reflectionLabel: String
+    @Binding var answerText: String
+
+    @State private var rating: Double = 3
+    @State private var reflection = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(scaleLabel).font(.lumiBody)
+                    Spacer()
+                    Text("\(Int(rating))/5")
+                        .font(.lumiCaption.bold())
+                        .foregroundStyle(LumiColor.accent)
+                }
+                Slider(value: $rating, in: 1...5, step: 1)
+                    .tint(LumiColor.accent)
+                    .onChange(of: rating) { _, _ in recompute() }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(reflectionLabel).font(.lumiCaption).foregroundStyle(.secondary)
+                TextEditor(text: $reflection)
+                    .frame(height: 90)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                    .onChange(of: reflection) { _, _ in recompute() }
+            }
+        }
+    }
+
+    private func recompute() {
+        let trimmed = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
+        answerText = trimmed.isEmpty ? "" : "\(Int(rating))/5. \(trimmed)"
+    }
+}
+
+// MARK: - 14. Мысль с автодополнением
+
+private struct TaggedThoughtExercise: View {
+    let suffix: String
+    @Binding var answerText: String
+    @State private var thought = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextEditor(text: $thought)
+                .frame(height: 90)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                .onChange(of: thought) { _, newValue in recompute(newValue) }
+
+            let trimmed = thought.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                Text("«\(trimmed) \(suffix)»")
+                    .font(.lumiCaption)
+                    .italic()
+                    .foregroundStyle(LumiColor.accent)
+            }
+        }
+    }
+
+    private func recompute(_ newValue: String) {
+        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        answerText = trimmed.isEmpty ? "" : "\(trimmed) \(suffix)"
+    }
+}
+
+// MARK: - 15. Действие + время сегодня
+
+private struct FreeTextWithTimePickerExercise: View {
+    let timeLabel: String
+    @Binding var answerText: String
+    @State private var text = ""
+    @State private var time = Date.now
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            TextEditor(text: $text)
+                .frame(height: 100)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                .onChange(of: text) { _, _ in recompute() }
+            DatePicker(timeLabel, selection: $time, displayedComponents: .hourAndMinute)
+                .onChange(of: time) { _, _ in recompute() }
+        }
+    }
+
+    private func recompute() {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            answerText = ""
+            return
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        answerText = "\(trimmed) — сегодня в \(formatter.string(from: time))"
     }
 }

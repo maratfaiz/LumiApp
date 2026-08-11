@@ -24,6 +24,16 @@ enum ExerciseKind: Codable, Hashable {
     /// Lesson 5.2's "what didn't work" / "what it doesn't cancel out") —
     /// same approved instruction, structured instead of one text blob.
     case multiPartReflection(labels: [String])
+    /// A 1–5 slider plus one reflection field (e.g. Lesson 0.1: rate your
+    /// confidence, then note the situation where it showed up).
+    case ratingWithReflection(scaleLabel: String, reflectionLabel: String)
+    /// User writes a thought; the UI appends a fixed suffix live (e.g.
+    /// Lesson 0.3: "... — это мысль, а не факт") — the reverse of
+    /// `.defusion`'s fixed prefix.
+    case taggedThought(suffix: String)
+    /// Free text plus a time-of-day picker, for exercises about doing
+    /// something specific today without a preset list of options.
+    case freeTextWithTimePicker(timeLabel: String)
 }
 
 struct MatchingPair: Codable, Hashable, Identifiable {
