@@ -56,10 +56,13 @@ targets:
       - path: LumiWidget
         excludes:
           - "Info.plist"
+          - "Assets.xcassets/**"
       - path: LumiApp/Core/Models/UserProgress.swift
       - path: LumiApp/Core/Models/GamificationRules.swift
       - path: LumiApp/Core/Persistence/AppGroup.swift
       - path: LumiApp/Core/Persistence/PersistenceController.swift
+    resources:
+      - path: LumiWidget/Assets.xcassets
     entitlements:
       path: LumiWidget/LumiWidget.entitlements
       properties:
@@ -70,6 +73,12 @@ targets:
         PRODUCT_NAME: LumiWidgetExtension
         GENERATE_INFOPLIST_FILE: false
         INFOPLIST_FILE: LumiWidget/Info.plist
+        # This target now has its own Assets.xcassets (skin-*.imageset);
+        # unset the project-level app-icon/accent-color settings meant for
+        # the main app so actool doesn't fail looking for sets that aren't
+        # in this catalog.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
     dependencies: []
 
   LumiAppTests:
