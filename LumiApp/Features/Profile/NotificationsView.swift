@@ -1,18 +1,19 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 private struct NotificationEntry: Identifiable {
-    let id = UUID()
+    let id: String
     let icon: String
     let text: String
     let date: Date?
 }
 
 /// F32 — history of lesson reminders, unlocked achievements, and
-/// return-after-miss nudges. Local push scheduling (F17) isn't wired up
-/// yet, so this derives what it can from current state rather than a
-/// persisted notification log; "lesson reminder" entries will show once
-/// that's built.
+/// return-after-miss nudges. Shows real delivered local notifications
+/// (NotificationScheduler.swift) merged with a synthesized fallback for
+/// achievements unlocked while notifications were off, so the list is
+/// never empty just because the user only turned reminders on recently.
 ///
 /// Safety (mandatory per doc): "Серия дней под угрозой — вернитесь
 /// сегодня" is a forbidden anxiety-inducing phrasing — never reintroduce
@@ -21,9 +22,11 @@ struct NotificationsView: View {
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
+    @State private var deliveredEntries: [NotificationEntry] = []
+
     var body: some View {
         Group {
-            let entries = progress.map(makeEntries) ?? []
+            let entries = combinedEntries()
             if entries.isEmpty {
                 EmptyStateView(message: "Пока нет уведомлений")
             } else {
@@ -43,23 +46,56 @@ struct NotificationsView: View {
             }
         }
         .navigationTitle("Уведомления")
+        .task { await loadDelivered() }
     }
 
-    private func makeEntries(_ progress: UserProgress) -> [NotificationEntry] {
-        var entries: [NotificationEntry] = []
+    private func loadDelivered() async {
+        let notifications: [UNNotification] = await withCheckedContinuation { continuation in
+            UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
+                continuation.resume(returning: notifications)
+            }
+        }
+        deliveredEntries = notifications.map { notification in
+            NotificationEntry(
+                id: notification.request.identifier,
+                icon: icon(forIdentifier: notification.request.identifier),
+                text: notification.request.content.body,
+                date: notification.date
+            )
+        }
+    }
 
-        for achievement in AchievementCatalog.all where achievement.isUnlocked(progress) {
+    private func icon(forIdentifier identifier: String) -> String {
+        if identifier.hasPrefix("achievement-") { return "rosette" }
+        if identifier == "return-after-miss" { return "moon.stars.fill" }
+        return "bell.fill"
+    }
+
+    private func combinedEntries() -> [NotificationEntry] {
+        guard let progress else { return deliveredEntries }
+
+        var entries = deliveredEntries
+        let deliveredAchievementIDs = Set(
+            deliveredEntries.map(\.id).filter { $0.hasPrefix("achievement-") }
+        )
+
+        for achievement in AchievementCatalog.all
+        where achievement.isUnlocked(progress)
+            && !deliveredAchievementIDs.contains(where: { $0.hasPrefix("achievement-\(achievement.id)-") }) {
             entries.append(NotificationEntry(
+                id: "synthesized-\(achievement.id)",
                 icon: "rosette",
                 text: "Открыто достижение «\(achievement.title)»",
                 date: nil
             ))
         }
 
-        if let lastActive = progress.lastActiveDate {
+        if let lastActive = progress.lastActiveDate,
+           deliveredEntries.allSatisfy({ $0.id != "return-after-miss" }) {
             let daysSince = Calendar.current.dateComponents([.day], from: lastActive, to: .now).day ?? 0
             if daysSince >= 1 {
                 entries.append(NotificationEntry(
+                    id: "synthesized-return-after-miss",
                     icon: "moon.stars.fill",
                     text: "Луми ждёт тебя, когда будешь готов(а) продолжить",
                     date: lastActive
@@ -67,7 +103,7 @@ struct NotificationsView: View {
             }
         }
 
-        return entries
+        return entries.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
     }
 }
 

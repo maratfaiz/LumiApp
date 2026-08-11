@@ -7,6 +7,10 @@ import SwiftUI
 struct MainTabView: View {
     @Query private var progresses: [UserProgress]
 
+    @AppStorage("remindersEnabled") private var remindersEnabled = false
+    @AppStorage("reminderHour") private var reminderHour = 19
+    @AppStorage("reminderMinute") private var reminderMinute = 0
+
     var body: some View {
         TabView {
             CourseListView()
@@ -22,6 +26,13 @@ struct MainTabView: View {
         .onAppear {
             if let progress = progresses.first {
                 StreakEngine.applyAutomaticFreezeIfDue(on: progress)
+            }
+            if remindersEnabled {
+                NotificationScheduler.reschedule(
+                    hour: reminderHour,
+                    minute: reminderMinute,
+                    lastActiveDate: progresses.first?.lastActiveDate
+                )
             }
         }
     }

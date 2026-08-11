@@ -38,6 +38,10 @@ final class UserProgress {
     /// Given name captured from the Sign in with Apple .fullName scope, if
     /// the user granted it (Apple only returns it on the very first auth).
     var userDisplayName: String?
+    /// F32 — achievement IDs already delivered as a local notification, so
+    /// NotificationScheduler.notifyAchievementUnlocked fires once per
+    /// achievement, not every time completedLessonIDs is checked.
+    var notifiedAchievementIDs: [String]
 
     init(
         xp: Int = 0,
@@ -59,7 +63,8 @@ final class UserProgress {
         extraDailyTaskTokens: Int = 0,
         lessonHintTokens: Int = 0,
         preferredFormatRawValue: String? = nil,
-        userDisplayName: String? = nil
+        userDisplayName: String? = nil,
+        notifiedAchievementIDs: [String] = []
     ) {
         self.xp = xp
         self.lumens = lumens
@@ -81,6 +86,7 @@ final class UserProgress {
         self.lessonHintTokens = lessonHintTokens
         self.preferredFormatRawValue = preferredFormatRawValue
         self.userDisplayName = userDisplayName
+        self.notifiedAchievementIDs = notifiedAchievementIDs
     }
 
     var level: Int { GamificationRules.level(forXP: xp) }

@@ -19,6 +19,10 @@ struct LessonPlayerView: View {
     @State private var showCompletion = false
     @State private var showCrisisSupport = false
 
+    @AppStorage("remindersEnabled") private var remindersEnabled = false
+    @AppStorage("reminderHour") private var reminderHour = 19
+    @AppStorage("reminderMinute") private var reminderMinute = 0
+
     private let crisisDetector = CrisisDetector()
 
     /// Reuses the prototype's own per-mechanic mascot pose
@@ -111,9 +115,25 @@ struct LessonPlayerView: View {
                 existing.lumens += GamificationRules.lumensBonusPerCourseCompletion
                 advanceToNextCourse(existing)
             }
+
+            notifyNewlyUnlockedAchievements(existing)
+        }
+
+        if remindersEnabled {
+            NotificationScheduler.reschedule(hour: reminderHour, minute: reminderMinute, lastActiveDate: existing.lastActiveDate)
         }
 
         showCompletion = true
+    }
+
+    private func notifyNewlyUnlockedAchievements(_ progress: UserProgress) {
+        for achievement in AchievementCatalog.all
+        where achievement.isUnlocked(progress) && !progress.notifiedAchievementIDs.contains(achievement.id) {
+            progress.notifiedAchievementIDs.append(achievement.id)
+            if remindersEnabled {
+                NotificationScheduler.notifyAchievementUnlocked(achievement)
+            }
+        }
     }
 
     /// Home shows `currentCourseID`'s next incomplete lesson — without this,
