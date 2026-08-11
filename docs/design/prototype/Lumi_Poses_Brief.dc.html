@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  body { margin:0; background:#0d0b22; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#0d0b22;padding:40px 32px 80px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:1000px;margin:0 auto">
+    <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:6px">Позы и образы Луми</div>
+    <div style="font-size:14px;color:#9c93c9;margin-bottom:36px;line-height:1.5">Полный список поз/эмоций Луми (звезда-талисман), нужных для прототипа. У каждой — экран, где она используется, и описание для художника/ИИ-генератора. Стиль: единый персонаж, круглая звезда с лицом, светло-фиолетовая палитра.</div>
+
+    <sc-for list="{{ sections }}" as="section" hint-placeholder-count="6">
+      <div style="margin-bottom:30px">
+        <div style="font-size:15px;font-weight:800;color:#c9c2e6;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1)">{{ section.title }}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ section.poses }}" as="pose" hint-placeholder-count="3">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px">
+              <div style="font-size:11px;color:#8b6cf6;font-weight:800;font-family:monospace;background:rgba(139,108,246,0.15);border-radius:8px;padding:4px 8px;flex-shrink:0;min-width:150px">{{ pose.screen }}</div>
+              <div style="font-size:13px;color:#e5e0f7;line-height:1.4;flex:1">{{ pose.desc }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const p = (screen, desc) => ({ screen, desc });
+    return {
+      sections: [
+        {
+          title: 'Заставка и знакомство',
+          poses: [
+            p('mascot-splash', 'Звезда сидит на облаке и машет рукой — приветливая, дружелюбная поза, фон тёмно-фиолетовый космос'),
+            p('mascot-welcome', 'Звезда стоит на маленькой планете, смотрит вверх с надеждой, вокруг парят мелкие звёздочки'),
+          ],
+        },
+        {
+          title: 'Онбординг (анкета)',
+          poses: [
+            p('mascot-ob1', 'Задумчивая звезда держит руку у подбородка, лёгкая улыбка — вопрос про самооценку'),
+            p('mascot-ob2', 'Звезда с вопросительным взглядом, приподнятая "бровь" — вопрос про тревоги'),
+            p('mascot-ob3', 'Звезда в наушниках, покачивается в такт — вопрос про формат обучения'),
+            p('mascot-ob4', 'Звезда держит в руках светящееся сердце — вопрос про цель пути'),
+            p('mascot-obtrack', 'Звезда стоит на планете и держит маленький флажок — план готов, гордая поза'),
+          ],
+        },
+        {
+          title: 'Главный экран',
+          poses: [
+            p('mascot-home', 'Звезда в наушниках, расслабленная стойка — карточка текущего урока'),
+            p('mascot-home-wardrobe', 'Звезда в шапке, подмигивает — плашка "стиль дня"'),
+          ],
+        },
+        {
+          title: 'Курс и урок',
+          poses: [
+            p('mascot-coursepage', 'Звезда в наушниках, спокойно сидит — обложка курса'),
+            p('mascot-lesson', 'Звезда в наушниках, внимательно слушает — старт урока'),
+            p('mascot-exercise-1', 'Звезда сердится, нахмурена — тема "внутренний критик"'),
+            p('mascot-ex1', 'Звезда с блокнотом и карандашом, пишет — упражнение "запиши мысль"'),
+            p('mascot-ex2', 'Звезда грустная, опущенные "плечи" — тема тяжёлой мысли'),
+            p('mascot-ex3', 'Звезда указывает пальцем вперёд, уверенно — момент осознания'),
+            p('mascot-ex4', 'Звезда в шляпе журналиста/репортёра, держит воображаемый микрофон'),
+            p('mascot-ex5a', 'Звезда держит карточку с мыслью на вытянутой "руке", нейтрально'),
+            p('mascot-ex5b', 'Звезда мягко улыбается, спокойная — принятие мысли'),
+            p('mascot-ex6', 'Звезда в окружении маленьких сердечек, тёплая улыбка — самопринятие'),
+            p('mascot-ex7', 'Звезда хлопает "руками" радостно — упражнение выполнено'),
+            p('mascot-ex8', 'Звезда пишет письмо гусиным пером/ручкой, сосредоточенно'),
+            p('mascot-ex9', 'Звезда летит на маленькой ракете, восторженно — прогресс/будущее'),
+            p('mascot-ex10', 'Звезда держит большое светящееся сердце двумя "руками", тепло — финал упражнения'),
+            p('mascot-lessoncomplete', 'Звезда в колпаке спит, обнимая подушку-звезду — урок завершён, отдых'),
+          ],
+        },
+        {
+          title: 'Дыхание и медитация',
+          poses: [
+            p('mascot-breathcomplete', 'Звезда сияет мягким светом, глаза закрыты, умиротворённая — дыхание завершено'),
+            p('mascot-meditation', 'Звезда медитирует в позе лотоса, парит, вокруг мелкие звёздочки — идёт медитация'),
+            p('mascot-meditationcomplete', 'Звезда светится ярче обычного, лёгкая улыбка, очень спокойная — медитация завершена'),
+          ],
+        },
+        {
+          title: 'Аффирмации',
+          poses: [
+            p('mascot-affirmcomplete', 'Звезда сияет, вокруг парят маленькие сердечки — аффирмации завершены'),
+          ],
+        },
+        {
+          title: 'Магазин / примерка образов',
+          poses: [
+            p('mascot-preview-*', 'Нейтральная фронтальная поза (лицо + верх "тела"), под каждый образ отдельно — база для примерки одежды/аксессуаров, см. страницу "Предметы магазина"'),
+          ],
+        },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
