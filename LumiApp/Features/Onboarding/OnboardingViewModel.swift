@@ -116,3 +116,11 @@ final class OnboardingViewModel {
         step = next
     }
 }
+
+extension UserProgress {
+    /// Ответы онбординга, сохранённые строками, — в виде enum'ов.
+    /// Живут здесь, а не в `UserProgress`: тот файл компилируется ещё и в
+    /// таргете виджета, где этих типов нет.
+    var goal: OnboardingGoal? { goalRawValue.flatMap(OnboardingGoal.init(rawValue:)) }
+    var preferredFormat: PreferredFormat? { preferredFormatRawValue.flatMap(PreferredFormat.init(rawValue:)) }
+}

@@ -100,6 +100,8 @@ enum LevelSystem {
 }
 
 extension UserProgress {
+    var levelTitle: String { LevelSystem.title(for: level) }
+
     func hintTokens(add count: Int) {
         guard count > 0 else { return }
         lessonHintTokens += count

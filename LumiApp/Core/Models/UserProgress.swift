@@ -142,9 +142,9 @@ final class UserProgress {
         self.notifiedAchievementIDs = notifiedAchievementIDs
     }
 
+    // Этот файл компилируется и в таргете виджета, поэтому здесь только то,
+    // что доступно обоим таргетам. Свойства, завязанные на уровни и ответы
+    // онбординга, живут в расширениях рядом с их типами.
     var level: Int { GamificationRules.level(forXP: xp) }
-    var levelTitle: String { LevelSystem.title(for: level) }
     var levelProgress: Double { GamificationRules.levelProgress(currentXP: xp) }
-    var goal: OnboardingGoal? { goalRawValue.flatMap(OnboardingGoal.init(rawValue:)) }
-    var preferredFormat: PreferredFormat? { preferredFormatRawValue.flatMap(PreferredFormat.init(rawValue:)) }
 }
