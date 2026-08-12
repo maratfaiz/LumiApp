@@ -34,7 +34,7 @@ struct HomeView: View {
                     EquippedMascotView(size: 150)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
 
                 freezeNotice
 
@@ -44,10 +44,6 @@ struct HomeView: View {
                 modeTiles
 
                 unlockedTechniques
-
-                if !(progress?.favoriteAffirmationIDs.isEmpty ?? true) {
-                    favoritesCard
-                }
 
                 wardrobePromo
                 quoteOfTheDayCard
@@ -82,7 +78,7 @@ struct HomeView: View {
                         fallbackSystemImage: "star.fill"
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 StatChip(
                     icon: "icon-freeze",
                     text: "\(progress.streakFreezesAvailable)/\(GamificationRules.maxStoredStreakFreezes)",
@@ -119,12 +115,9 @@ struct HomeView: View {
                     Text("Продолжить урок →")
                         .font(.lumi(15, weight: .heavy))
                         .foregroundStyle(Color.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .lumiPrimaryButtonSurface()
                 }
-                .buttonStyle(.plain)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(LumiGradient.primary))
-                .shadow(color: LumiColor.purple2.opacity(0.45), radius: 14, y: 8)
+                .buttonStyle(.lumiPlain)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -181,7 +174,7 @@ struct HomeView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isSuggested ? LumiColor.purple1.opacity(0.18) : LumiColor.cardFillLight)
@@ -215,48 +208,12 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lumiPlain)
                     .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
                 }
             }
         }
-    }
-
-    /// Избранные аффирмации теперь возвращаются к пользователю сами —
-    /// одна из отмеченных фраз показывается на главной.
-    @ViewBuilder private var favoritesCard: some View {
-        if let affirmation = favoriteOfTheDay {
-            NavigationLink(destination: FavoriteAffirmationsView()) {
-                HStack(alignment: .top, spacing: 11) {
-                    LumiIcon(name: "icon-quote", size: 16, fallbackSystemImage: "quote.opening")
-                        .foregroundStyle(LumiColor.purple1.opacity(0.7))
-                    VStack(alignment: .leading, spacing: 3) {
-                        SectionLabel(text: "Твои слова", color: LumiColor.purpleLight, size: 10)
-                        Text(affirmation.text)
-                            .font(.lumi(12.5, weight: .semibold))
-                            .foregroundStyle(LumiColor.textBright)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer(minLength: 0)
-                }
-                .padding(14)
-            }
-            .buttonStyle(.plain)
-            .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
-        }
-    }
-
-    /// Детерминированный выбор по дню — фраза не прыгает при каждом
-    /// обновлении экрана.
-    private var favoriteOfTheDay: Affirmation? {
-        guard let progress else { return nil }
-        let favorites = AffirmationCatalog.fullDeck(custom: progress.customAffirmations)
-            .filter { progress.favoriteAffirmationIDs.contains($0.id) }
-        guard !favorites.isEmpty else { return nil }
-        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: .now) ?? 1
-        return favorites[dayOfYear % favorites.count]
     }
 
     // MARK: Freeze notice
@@ -314,7 +271,7 @@ struct HomeView: View {
             }
             .padding(14)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(LumiColor.cardFillLight))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)

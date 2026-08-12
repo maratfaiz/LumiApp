@@ -51,8 +51,6 @@ struct MeditationView: View {
                     .font(.lumi(13, weight: .semibold))
                     .foregroundStyle(LumiColor.textSecondary)
 
-                PracticeRewardBadge(practice: .meditation, progress: progress)
-
                 halo
 
                 ambienceRow
@@ -110,7 +108,7 @@ struct MeditationView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 9)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .disabled(viewModel.isRunning)
                 .opacity(viewModel.isRunning ? 0.5 : 1)
                 .background(RoundedRectangle(cornerRadius: 12).fill(isActive ? LumiColor.purple1.opacity(0.25) : LumiColor.cardFillLight))
@@ -132,7 +130,7 @@ struct MeditationView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .disabled(viewModel.isRunning)
                 .opacity(viewModel.isRunning ? 0.5 : 1)
                 .background(RoundedRectangle(cornerRadius: 12).fill(isActive ? LumiColor.purple1.opacity(0.25) : LumiColor.cardFillLight))

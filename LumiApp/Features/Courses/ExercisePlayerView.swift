@@ -124,7 +124,7 @@ private struct ExerciseOptionRow: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(isSelected ? LumiColor.purple1 : LumiColor.cardBorder, lineWidth: isSelected ? 2 : 1)
         )
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 
@@ -248,7 +248,7 @@ private struct FactOrJudgmentExercise: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(isSelected ? LumiColor.purple1.opacity(0.22) : LumiColor.cardFillLight)

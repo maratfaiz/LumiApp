@@ -82,12 +82,9 @@ struct CourseDetailView: View {
                         Text(completedCount == 0 ? "Начать урок →" : "Продолжить урок →")
                             .font(.lumi(15, weight: .heavy))
                             .foregroundStyle(Color.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            .lumiPrimaryButtonSurface()
                     }
-                    .buttonStyle(.plain)
-                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(LumiGradient.primary))
-                    .shadow(color: LumiColor.purple2.opacity(0.45), radius: 14, y: 8)
+                    .buttonStyle(.lumiPlain)
                     .padding(.top, 8)
                 }
             }
@@ -142,7 +139,7 @@ struct CourseDetailView: View {
             row.accessibilityHint("Урок заблокирован")
         } else {
             NavigationLink(value: lesson) { row }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
         }
     }
 }

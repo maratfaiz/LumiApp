@@ -57,7 +57,7 @@ struct JournalEditorView: View {
                                 .font(.lumi(11, weight: .bold))
                                 .foregroundStyle(LumiColor.purpleLight)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.lumiPlain)
                         .opacity(note.isEmpty ? 0 : 1)
                     }
 
@@ -123,7 +123,7 @@ struct JournalEditorView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isSelected ? LumiColor.purple1.opacity(0.22) : LumiColor.cardFillLight)

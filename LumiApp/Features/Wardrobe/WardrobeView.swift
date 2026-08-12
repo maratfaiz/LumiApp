@@ -134,7 +134,7 @@ struct WardrobeView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(Capsule().fill(isActive ? LumiColor.purple1.opacity(0.3) : LumiColor.cardFillLight))
         .overlay(Capsule().stroke(isActive ? LumiColor.purple1.opacity(0.6) : LumiColor.cardBorder, lineWidth: 1))
     }
@@ -219,7 +219,7 @@ struct WardrobeView: View {
             }
             .padding(7)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(RoundedRectangle(cornerRadius: 12).fill(fillColor))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(borderColor, lineWidth: equipped || previewed ? 2 : 1.5))
     }

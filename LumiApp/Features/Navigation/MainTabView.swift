@@ -214,7 +214,7 @@ struct LumiTabBar: View {
                     .foregroundStyle(isActive ? Color.white : LumiColor.textSecondary)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .offset(y: -14)
         .accessibilityLabel("Луми, главный экран")
     }
@@ -231,7 +231,7 @@ struct LumiTabBar: View {
             .foregroundStyle(isActive ? LumiColor.purpleLight : LumiColor.textDim)
             .padding(.top, 8)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .accessibilityLabel(label)
     }
 }

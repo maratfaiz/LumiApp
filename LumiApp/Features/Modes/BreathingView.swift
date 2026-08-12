@@ -55,8 +55,6 @@ struct BreathingView: View {
                     .font(.lumi(12, weight: .semibold))
                     .foregroundStyle(LumiColor.textSecondary)
 
-                PracticeRewardBadge(practice: .breathing, progress: progress)
-
                 HStack(spacing: 8) {
                     ControlPillButton(
                         icon: "arrow.counterclockwise",
@@ -86,6 +84,12 @@ struct BreathingView: View {
                         .lumiAccentCard(LumiColor.purple1, radius: 14)
                 }
 
+                // Порядок ряда: настройки практики (заново / инфо / скорость /
+                // циклы) — сверху, «Начать» — последним. Счётчик циклов
+                // настраивают до запуска, поэтому ему место рядом с
+                // остальными настройками, а не под кнопкой запуска.
+                cyclesStepper
+
                 HStack {
                     Spacer()
                     TransportButton(
@@ -98,8 +102,6 @@ struct BreathingView: View {
                     }
                     Spacer()
                 }
-
-                cyclesStepper
             }
             .frame(maxWidth: .infinity)
         }

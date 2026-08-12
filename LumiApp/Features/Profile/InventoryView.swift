@@ -99,7 +99,7 @@ struct InventoryView: View {
                         }
                         .padding(12)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lumiPlain)
                     .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
                 }
@@ -135,7 +135,7 @@ struct InventoryView: View {
                         .padding(12)
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lumiPlain)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(equipped ? LumiColor.yellow.opacity(0.12) : LumiColor.cardFillLight)

@@ -34,8 +34,14 @@ targets:
           - "LumiApp.entitlements"
           - "Core/Crisis/CrisisPatterns.example.json"
           - "Core/Crisis/README.md"
-    resources:
+      # Ресурсы — отдельной записью в sources с buildPhase: resources.
+      # Ключа `resources:` у таргета в XcodeGen нет: он молча игнорировался,
+      # а Resources/** был исключён из sources — из-за этого весь каталог
+      # ассетов вообще не попадал в бандл. Сборка при этом проходила, но в
+      # приложении не было ни одной картинки: LumiIcon показывал «?»,
+      # LumiMascot — фиолетовый круг вместо звёздочки.
       - path: LumiApp/Resources
+        buildPhase: resources
     entitlements:
       path: LumiApp/LumiApp.entitlements
       properties:
@@ -75,10 +81,13 @@ targets:
     platform: iOS
     deploymentTarget: "17.0"
     sources:
+      # Assets.xcassets больше не исключаем: XcodeGen сам кладёт каталог
+      # ассетов в фазу ресурсов, а прежняя пара «исключить + resources:»
+      # оставляла виджет вообще без картинок (ключа `resources:` у таргета
+      # в XcodeGen не существует).
       - path: LumiWidget
         excludes:
           - "Info.plist"
-          - "Assets.xcassets/**"
       # Shared with the app target so the widgets read the same data and
       # the same design tokens instead of keeping a drifting copy.
       - path: LumiApp/Core/Models/UserProgress.swift
@@ -93,8 +102,6 @@ targets:
       - path: LumiApp/Core/Persistence/PersistenceController.swift
       - path: LumiApp/Core/DesignSystem/LumiColor.swift
       - path: LumiApp/Core/DesignSystem/LumiTypography.swift
-    resources:
-      - path: LumiWidget/Assets.xcassets
     entitlements:
       path: LumiWidget/LumiWidget.entitlements
       properties:

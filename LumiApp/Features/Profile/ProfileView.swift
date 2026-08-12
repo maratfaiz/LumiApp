@@ -8,6 +8,14 @@ struct ProfileView: View {
     private var progress: UserProgress? { progresses.first }
 
     @State private var showCrisis = false
+    @State private var isEditingName = false
+    @State private var nameDraft = ""
+    @Environment(\.modelContext) private var modelContext
+
+    private var displayName: String {
+        let name = progress?.userDisplayName ?? ""
+        return name.isEmpty ? "Добавить имя" : name
+    }
 
     var body: some View {
         LumiScreen {
@@ -24,6 +32,25 @@ struct ProfileView: View {
         .fullScreenCover(isPresented: $showCrisis) {
             CrisisSupportView()
         }
+        .alert("Как к тебе обращаться?", isPresented: $isEditingName) {
+            TextField("Имя", text: $nameDraft)
+                .textInputAutocapitalization(.words)
+            Button("Сохранить") { saveName() }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Имя видно только в приложении — его можно поменять в любой момент.")
+        }
+    }
+
+    private func saveName() {
+        let trimmed = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let target = progress ?? {
+            let new = UserProgress()
+            modelContext.insert(new)
+            return new
+        }()
+        target.userDisplayName = trimmed.isEmpty ? nil : trimmed
+        WidgetSync.refresh()
     }
 
     // MARK: Header
@@ -50,7 +77,7 @@ struct ProfileView: View {
                 }
                 .accessibilityLabel("Уведомления")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
         }
     }
 
@@ -76,7 +103,7 @@ struct ProfileView: View {
                     .frame(width: 32, height: 32)
                     .background(Circle().fill(Color.white.opacity(0.1)))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
             .padding(14)
             .accessibilityLabel("Изменить образ Луми")
         }
@@ -86,9 +113,25 @@ struct ProfileView: View {
 
     private var levelCard: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(progress?.userDisplayName ?? "Луми")
-                .font(.lumi(15, weight: .heavy))
-                .foregroundStyle(Color.white)
+            // Карандаш у образа Луми уже занят гардеробом, поэтому имя
+            // редактируется своим — прямо рядом с именем, а не только в
+            // настройках, куда за этим никто не пойдёт.
+            Button {
+                nameDraft = progress?.userDisplayName ?? ""
+                isEditingName = true
+            } label: {
+                HStack(spacing: 7) {
+                    Text(displayName)
+                        .font(.lumi(15, weight: .heavy))
+                        .foregroundStyle(Color.white)
+                    LumiIcon(name: "icon-edit", size: 12, fallbackSystemImage: "pencil")
+                        .foregroundStyle(LumiColor.textDim)
+                    Spacer(minLength: 0)
+                }
+            }
+            .buttonStyle(.lumiPlain)
+            .accessibilityLabel("Изменить имя")
+
             HStack(spacing: 6) {
                 Text("Уровень \(progress?.level ?? 1)")
                     .font(.lumi(11.5, weight: .semibold))
@@ -139,12 +182,12 @@ struct ProfileView: View {
             NavigationLink(destination: ShopView()) {
                 statTile(icon: "icon-lumen", fallback: "star.fill", value: "\(progress?.lumens ?? 0)", label: "Люменов", color: LumiColor.yellow)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
 
             NavigationLink(destination: StreakDetailView()) {
                 statTile(icon: "icon-streak", fallback: "flame.fill", value: "\(progress?.currentStreakDays ?? 0)", label: "Серия дней", color: LumiColor.orange1)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
 
             NavigationLink(destination: StreakDetailView()) {
                 statTile(
@@ -155,7 +198,7 @@ struct ProfileView: View {
                     color: LumiColor.blueChip
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
         }
     }
 
@@ -188,7 +231,7 @@ struct ProfileView: View {
                         .font(.lumi(12, weight: .bold))
                         .foregroundStyle(LumiColor.purpleLighter)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
             }
 
             HStack(spacing: 8) {
@@ -265,7 +308,7 @@ struct ProfileView: View {
             .foregroundStyle(LumiColor.textBright)
             .padding(12)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
     }

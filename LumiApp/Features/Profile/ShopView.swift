@@ -30,7 +30,7 @@ struct ShopView: View {
                             } label: {
                                 ShopItemCard(item: item, progress: progress)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lumiPlain)
                         }
                     }
                 }
@@ -122,7 +122,7 @@ struct ShopView: View {
                     .padding(13)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
             }
         }
@@ -158,7 +158,7 @@ struct ShopView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
             }
         }
     }

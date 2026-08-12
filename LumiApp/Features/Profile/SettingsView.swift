@@ -19,6 +19,8 @@ struct SettingsView: View {
     @State private var showPrivacy = false
     @State private var isEditingName = false
     @State private var nameDraft = ""
+    @State private var showRestartOnboarding = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.modelContext) private var modelContext
 
     @Query private var progresses: [UserProgress]
@@ -70,7 +72,7 @@ struct SettingsView: View {
                     .padding(.vertical, 12)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
 
                 divider
 
@@ -113,6 +115,13 @@ struct SettingsView: View {
                 }
 
                 divider
+                // Ответы знакомства влияют на порядок практик, «Мысль дня» и
+                // рекомендации в магазине — значит, их надо уметь поменять.
+                // Заодно это единственный способ снова увидеть первый экран:
+                // приложение помнит, что знакомство пройдено, и больше его
+                // не показывает.
+                settingsRow("Пройти знакомство заново") { showRestartOnboarding = true }
+                divider
                 settingsRow("Дисклеймер") { showDisclaimer = true }
                 divider
                 settingsRow("Политика конфиденциальности") { showPrivacy = true }
@@ -140,6 +149,12 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPrivacy) {
             privacySheet
+        }
+        .alert("Пройти знакомство заново?", isPresented: $showRestartOnboarding) {
+            Button("Пройти заново") { hasCompletedOnboarding = false }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Ответы на вопросы обновятся. Уроки, серия, люмены и покупки останутся на месте.")
         }
         .alert("Как к тебе обращаться?", isPresented: $isEditingName) {
             TextField("Имя", text: $nameDraft)
@@ -172,15 +187,34 @@ struct SettingsView: View {
             .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 
+    /// Лист с политикой живёт в собственном `NavigationStack` ради панели
+    /// сверху: без неё заголовок начинался вплотную к краю листа, уезжал под
+    /// «язычок» и выглядел обрезанным, а закрыть лист можно было только
+    /// смахиванием — кнопки не было вовсе.
     private var privacySheet: some View {
+        NavigationStack {
+            privacyContent
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Закрыть") { showPrivacy = false }
+                            .font(.lumi(13, weight: .bold))
+                            .foregroundStyle(LumiColor.purpleLight)
+                    }
+                }
+        }
+        .presentationBackground(LumiColor.bgDeep)
+    }
+
+    private var privacyContent: some View {
         LumiScreen {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Политика конфиденциальности")
                     .font(.lumiScreenTitle(20))
                     .foregroundStyle(Color.white)
+                    .padding(.top, 4)
                 Text("Версия \(PrivacyPolicy.version) · от \(PrivacyPolicy.effectiveDate)")
                     .font(.lumi(10.5, weight: .semibold))
                     .foregroundStyle(LumiColor.textDim)

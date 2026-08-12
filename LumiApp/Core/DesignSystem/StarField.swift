@@ -27,7 +27,10 @@ struct StarField: View {
                 }
             }
         }
-        .ignoresSafeArea()
+        // Звёзды намеренно НЕ уходят под safe area. С `ignoresSafeArea()`
+        // верхние искры (y ≈ 0.02…0.06) попадали на строку статуса и на
+        // панель навигации — фон мерцал поверх часов и кнопки «назад», и
+        // выглядело это так, будто фон нарисован сверху экрана.
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }

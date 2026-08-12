@@ -20,38 +20,37 @@ struct AchievementsView: View {
         return AchievementCatalog.all.filter { !$0.isUnlocked(progress) }
     }
 
+    /// Экран показывает весь список всегда, даже на нулевом прогрессе.
+    /// Раньше до первого урока вместо достижений была заглушка «здесь
+    /// появятся…», и было непонятно, что вообще можно получить и за что.
+    /// Закрытые значки видно с самого начала — вместе с условием, наградой
+    /// и полоской прогресса.
     var body: some View {
-        Group {
-            if let progress, !progress.completedLessonIDs.isEmpty {
-                LumiScreen {
-                    VStack(alignment: .leading, spacing: 18) {
-                        HStack(alignment: .lastTextBaseline) {
-                            Text("Достижения")
-                                .font(.lumiScreenTitle(22))
-                                .foregroundStyle(Color.white)
-                            Spacer()
-                            Text("\(unlocked.count) из \(AchievementCatalog.all.count)")
-                                .font(.lumi(12, weight: .bold))
-                                .foregroundStyle(LumiColor.textSecondary)
-                        }
+        LumiScreen {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .lastTextBaseline) {
+                    Text("Достижения")
+                        .font(.lumiScreenTitle(22))
+                        .foregroundStyle(Color.white)
+                    Spacer()
+                    Text("\(unlocked.count) из \(AchievementCatalog.all.count)")
+                        .font(.lumi(12, weight: .bold))
+                        .foregroundStyle(LumiColor.textSecondary)
+                }
 
-                        if !unlocked.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                SectionLabel(text: "Открыто", size: 12)
-                                ForEach(unlocked) { unlockedRow($0) }
-                            }
-                        }
-
-                        if !upcoming.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                SectionLabel(text: "Впереди", size: 12)
-                                ForEach(upcoming) { upcomingRow($0) }
-                            }
-                        }
+                if !unlocked.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionLabel(text: "Открыто", size: 12)
+                        ForEach(unlocked) { unlockedRow($0) }
                     }
                 }
-            } else {
-                EmptyStateView(message: "Здесь появятся ваши достижения, как только вы пройдёте первый урок")
+
+                if !upcoming.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionLabel(text: unlocked.isEmpty ? "Что можно открыть" : "Впереди", size: 12)
+                        ForEach(upcoming) { upcomingRow($0) }
+                    }
+                }
             }
         }
         .navigationTitle("")

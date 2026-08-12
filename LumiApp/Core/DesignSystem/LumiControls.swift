@@ -19,17 +19,55 @@ struct PrimaryButton: View {
                 Text(title)
             }
             .font(.lumi(15, weight: .heavy))
+            .foregroundStyle(isEnabled ? Color.white : LumiColor.textDim)
+            .lumiPrimaryButtonSurface(isEnabled: isEnabled)
+        }
+        .buttonStyle(.lumiPlain)
+        .disabled(!isEnabled)
+    }
+}
+
+/// Плоская кнопка Lumi: как `.plain`, но нажатие ловит **вся** область
+/// метки, а не только непрозрачный текст внутри неё.
+///
+/// В SwiftUI `Button { Text("Начать").frame(maxWidth: .infinity) }` кликается
+/// лишь по буквам: расширенная рамка и отступы прозрачны для hit-testing, а
+/// фон, навешенный снаружи кнопки, в её область попадания не входит вовсе.
+/// Именно поэтому по широкой фиолетовой кнопке «Начать урок» можно было
+/// промахнуться, попав в неё же. `contentShape` в стиле чинит это разом для
+/// всех кнопок приложения; заодно появляется отклик на нажатие, которого
+/// у `.plain` нет.
+struct LumiPlainButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .opacity(configuration.isPressed ? 0.72 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == LumiPlainButtonStyle {
+    static var lumiPlain: LumiPlainButtonStyle { LumiPlainButtonStyle() }
+}
+
+extension View {
+    /// Фиолетовая «таблетка» основной кнопки.
+    ///
+    /// Заливка и `contentShape` живут **внутри** метки кнопки намеренно.
+    /// Раньше фон вешался снаружи (`Button { Text() }.background(...)`), и
+    /// нажатие ловил только сам текст: широкая кнопка выглядела как кнопка,
+    /// но реагировала лишь на попадание по буквам. Отсюда и «не могу начать
+    /// урок» — по градиенту рядом со словами ничего не происходило.
+    func lumiPrimaryButtonSurface(isEnabled: Bool = true, radius: CGFloat = 14) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return self
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-        }
-        .foregroundStyle(isEnabled ? Color.white : LumiColor.textDim)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isEnabled ? AnyShapeStyle(LumiGradient.primary) : AnyShapeStyle(Color.white.opacity(0.08)))
-        )
-        .shadow(color: isEnabled ? LumiColor.purple2.opacity(0.45) : .clear, radius: 14, y: 8)
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
+            .background(
+                shape.fill(isEnabled ? AnyShapeStyle(LumiGradient.primary) : AnyShapeStyle(Color.white.opacity(0.08)))
+            )
+            .contentShape(shape)
+            .shadow(color: isEnabled ? LumiColor.purple2.opacity(0.45) : .clear, radius: 14, y: 8)
     }
 }
 
@@ -54,7 +92,7 @@ struct SecondaryButton: View {
         .foregroundStyle(LumiColor.textBright)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(LumiColor.cardFillLight))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(LumiColor.cardBorder, lineWidth: 1))
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 
@@ -71,7 +109,7 @@ struct TextLinkButton: View {
                 .foregroundStyle(color)
                 .padding(12)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 
@@ -101,7 +139,7 @@ struct ControlPillButton: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isActive ? LumiColor.purple1.opacity(0.4) : LumiColor.cardBorder, lineWidth: 1)
         )
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 
@@ -125,7 +163,7 @@ struct TransportButton: View {
         )
         .overlay(Circle().stroke(Color.white.opacity(prominent ? 0 : 0.12), lineWidth: 1))
         .shadow(color: prominent ? LumiColor.purple1.opacity(0.4) : .clear, radius: 10, y: 4)
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .accessibilityLabel(accessibilityTitle)
     }
 }
@@ -235,7 +273,7 @@ struct SelectableOptionRow: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(isSelected ? LumiColor.purple1 : LumiColor.cardBorder, lineWidth: isSelected ? 2 : 1)
         )
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 
@@ -311,7 +349,7 @@ struct RatingCircle: View {
         )
         .overlay(Circle().stroke(Color.white.opacity(isSelected ? 0 : 0.12), lineWidth: 1))
         .shadow(color: isSelected ? LumiColor.purple2.opacity(0.5) : .clear, radius: 10, y: 4)
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
     }
 }
 

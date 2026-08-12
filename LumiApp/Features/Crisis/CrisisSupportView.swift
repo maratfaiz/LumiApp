@@ -67,7 +67,7 @@ struct CrisisSupportView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .lumiAccentCard(line.color, radius: 14)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.lumiPlain)
                     }
 
                     HStack(spacing: 10) {

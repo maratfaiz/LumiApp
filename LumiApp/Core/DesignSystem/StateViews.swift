@@ -37,7 +37,7 @@ struct EmptyStateView: View {
                         .padding(.horizontal, 22)
                         .padding(.vertical, 13)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .background(RoundedRectangle(cornerRadius: 14).fill(LumiGradient.primary))
             }
             Spacer(minLength: 0)
@@ -95,7 +95,7 @@ struct ErrorStateView: View {
                     .padding(.horizontal, 22)
                     .padding(.vertical, 13)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
             .background(RoundedRectangle(cornerRadius: 14).fill(LumiGradient.primary))
         }
         .padding(32)

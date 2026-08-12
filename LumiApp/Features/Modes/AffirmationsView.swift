@@ -11,7 +11,6 @@ struct AffirmationsView: View {
     @State private var viewModel = AffirmationsViewModel()
     @State private var dragOffset: CGFloat = 0
     @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
-    @State private var onlyFavorites = false
     @State private var showFavorites = false
 
     @Environment(\.modelContext) private var modelContext
@@ -42,26 +41,27 @@ struct AffirmationsView: View {
         }
         .onDisappear { viewModel.stopSpeaking() }
         .onAppear { applyDeck() }
-        .onChange(of: onlyFavorites) { _, _ in applyDeck() }
+        // Вернулись из редактора своих фраз — колода пересобирается, чтобы
+        // только что записанная строка сразу оказалась в общей стопке.
+        .onChange(of: showFavorites) { _, isOpen in
+            if !isOpen { applyDeck() }
+        }
         .navigationDestination(isPresented: $showFavorites) { FavoriteAffirmationsView() }
     }
 
-    /// Колода собирается из каталога и своих фраз; режим «только
-    /// избранные» делает практику по-настоящему персональной.
+    /// Колода одна: каталог плюс свои фразы. Раньше здесь был
+    /// переключатель «вся колода / только мои», и он делил практику надвое —
+    /// свои слова приходилось специально включать, а по умолчанию их не было
+    /// видно. Теперь записанная фраза попадает в общую колоду сразу, наравне
+    /// с остальными карточками, и переключать нечего.
     private func applyDeck() {
-        let custom = progress?.customAffirmations ?? []
-        let deck = onlyFavorites
-            ? AffirmationCatalog.favoritesDeck(favoriteIDs: progress?.favoriteAffirmationIDs ?? [], custom: custom)
-            : AffirmationCatalog.fullDeck(custom: custom)
-        viewModel.replaceDeck(deck)
+        viewModel.replaceDeck(AffirmationCatalog.fullDeck(custom: progress?.customAffirmations ?? []))
     }
 
     private var player: some View {
         LumiScreen {
             VStack(spacing: 18) {
-                Spacer(minLength: 8)
-
-                PracticeRewardBadge(practice: .affirmations, progress: progress)
+                Spacer(minLength: 0)
 
                 card
                     .offset(x: dragOffset)
@@ -78,19 +78,6 @@ struct AffirmationsView: View {
                             }
                     )
                     .animation(.spring(response: 0.3), value: viewModel.currentIndex)
-
-                HStack(spacing: 8) {
-                    ControlPillButton(
-                        icon: "icon-heart-outline",
-                        label: onlyFavorites ? "Только мои" : "Вся колода",
-                        isActive: onlyFavorites
-                    ) {
-                        onlyFavorites.toggle()
-                    }
-                    ControlPillButton(icon: "icon-quote", label: "Мои слова", isActive: false) {
-                        showFavorites = true
-                    }
-                }
 
                 HStack(spacing: 8) {
                     ControlPillButton(
@@ -112,6 +99,9 @@ struct AffirmationsView: View {
                         isActive: viewModel.speechRate != 0.5,
                         action: cycleSpeechRate
                     )
+                    ControlPillButton(icon: "icon-quote", label: "Мои слова", isActive: false) {
+                        showFavorites = true
+                    }
                 }
 
                 HStack {
@@ -139,8 +129,12 @@ struct AffirmationsView: View {
         }
     }
 
+    /// Текст стоит по центру карточки — и по горизонтали, и по вертикали.
+    /// Раньше `ZStack(alignment: .topLeading)` прижимал содержимое к
+    /// верхнему краю: на короткой аффирмации она висела под самой кавычкой,
+    /// а низ карточки пустовал.
     private var card: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             RoundedRectangle(cornerRadius: 22)
                 .fill(
                     LinearGradient(
@@ -149,10 +143,11 @@ struct AffirmationsView: View {
                     )
                 )
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(LumiColor.purple1.opacity(0.3), lineWidth: 1))
-
-            LumiIcon(name: "icon-quote", size: 28, fallbackSystemImage: "quote.opening")
-                .foregroundStyle(LumiColor.purple1.opacity(0.35))
-                .padding(16)
+                .overlay(alignment: .topLeading) {
+                    LumiIcon(name: "icon-quote", size: 28, fallbackSystemImage: "quote.opening")
+                        .foregroundStyle(LumiColor.purple1.opacity(0.35))
+                        .padding(16)
+                }
 
             VStack(spacing: 12) {
                 Text("«\(viewModel.current.text)»")

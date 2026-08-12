@@ -128,7 +128,7 @@ struct CourseListView: View {
             row.accessibilityHint("Курс заблокирован")
         } else {
             NavigationLink(value: course) { row }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
         }
     }
 

@@ -121,7 +121,7 @@ struct LessonPlayerView: View {
                         .foregroundStyle(LumiColor.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .padding(.bottom, 12)
 
                 PrimaryButton(title: "Завершить", isEnabled: !isAnswerEmpty, action: submit)
@@ -205,7 +205,7 @@ struct LessonPlayerView: View {
                     .padding(12)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
                 .disabled(hintTokens == 0)
                 .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
                 .overlay(

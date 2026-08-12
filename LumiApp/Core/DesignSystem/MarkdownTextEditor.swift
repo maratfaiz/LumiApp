@@ -118,7 +118,7 @@ struct MarkdownToolbar: View {
                 .foregroundStyle(LumiColor.textBright)
                 .frame(width: 38, height: 32)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(RoundedRectangle(cornerRadius: 10).fill(LumiColor.cardFillLight))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(LumiColor.cardBorder, lineWidth: 1))
     }

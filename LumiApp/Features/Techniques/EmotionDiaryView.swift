@@ -118,7 +118,7 @@ struct EmotionDiaryView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(LumiColor.textDim)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.lumiPlain)
             }
         }
         .padding(.horizontal, 14)
@@ -154,7 +154,7 @@ struct EmotionDiaryView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lumiPlain)
         .background(Capsule().fill(isActive ? LumiColor.purple1.opacity(0.3) : LumiColor.cardFillLight))
         .overlay(Capsule().stroke(isActive ? LumiColor.purple1.opacity(0.6) : LumiColor.cardBorder, lineWidth: 1))
     }

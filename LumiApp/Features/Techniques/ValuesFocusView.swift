@@ -73,7 +73,7 @@ struct ValuesFocusView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lumiPlain)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(isSelected ? LumiColor.purple1.opacity(0.22) : LumiColor.cardFillLight)
@@ -146,7 +146,7 @@ struct ValuesFocusView: View {
                 }
                 .padding(14)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.lumiPlain)
             .background(RoundedRectangle(cornerRadius: 14).fill(LumiColor.cardFillLight))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(LumiColor.cardBorder, lineWidth: 1))
 

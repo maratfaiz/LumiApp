@@ -21,7 +21,7 @@ struct OnboardingQuestionsView: View {
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(LumiColor.textBody)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.lumiPlain)
                         .accessibilityLabel("Назад")
                     }
                     OnboardingHeader(step: step, total: total)
