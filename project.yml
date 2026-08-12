@@ -48,6 +48,12 @@ targets:
       path: LumiApp/Info.plist
       properties:
         CFBundleDisplayName: Lumi
+        # Версии берём из настроек сборки: иначе XcodeGen подставит в
+        # собственный Info.plist свои дефолтные 1.0/1, и версия приложения
+        # разойдётся с версией виджета (MARKETING_VERSION) — на этом
+        # спотыкается валидация расширения при загрузке в App Store.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
