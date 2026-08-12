@@ -8,12 +8,17 @@ import SwiftUI
 struct LessonCompletionView: View {
     let course: Course
     let lesson: Lesson
+    /// Уровни, взятые этим уроком (могут быть сразу несколько).
+    var newLevels: [LevelReward] = []
+    /// Достижения, открытые этим уроком.
+    var newAchievements: [Achievement] = []
 
     @Environment(\.dismiss) private var dismiss
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
     @State private var showStreakStart = false
+    @State private var showLevelUp = false
 
     private var isFirstStreakDay: Bool {
         (progress?.currentStreakDays ?? 0) == 1 && (progress?.completedLessonIDs.count ?? 0) <= 1
@@ -56,6 +61,15 @@ struct LessonCompletionView: View {
                 }
                 .padding(.bottom, 22)
 
+                if !newAchievements.isEmpty {
+                    VStack(spacing: 8) {
+                        ForEach(newAchievements) { achievement in
+                            AchievementUnlockedBanner(achievement: achievement)
+                        }
+                    }
+                    .padding(.bottom, 18)
+                }
+
                 if !lesson.result.isEmpty && lesson.result != "TODO" {
                     Text(lesson.result)
                         .font(.lumi(12, weight: .semibold))
@@ -76,10 +90,21 @@ struct LessonCompletionView: View {
             .frame(maxWidth: .infinity)
         }
         .onAppear {
-            if isFirstStreakDay { showStreakStart = true }
+            if isFirstStreakDay {
+                showStreakStart = true
+            } else if !newLevels.isEmpty {
+                showLevelUp = true
+            }
         }
-        .fullScreenCover(isPresented: $showStreakStart) {
+        .fullScreenCover(isPresented: $showStreakStart, onDismiss: {
+            // Сначала «серия начата», следом — уровень, если он взят тем же
+            // уроком: два праздника не должны драться за экран.
+            if !newLevels.isEmpty { showLevelUp = true }
+        }) {
             StreakStartView { showStreakStart = false }
+        }
+        .fullScreenCover(isPresented: $showLevelUp) {
+            LevelUpView(rewards: newLevels) { showLevelUp = false }
         }
     }
 

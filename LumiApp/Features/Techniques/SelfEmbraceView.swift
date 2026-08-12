@@ -29,7 +29,7 @@ struct SelfEmbraceView: View {
                     title: "Самообъятие",
                     subtitle: isFinished
                         ? "Минута прошла. Заметь, что изменилось в теле."
-                        : "Обними себя за плечи, чуть сожми — и просто побудь так минуту.",
+                        : "Обними себя за плечи или положи ладонь на грудь — и просто побудь так минуту.",
                     mascotAsset: "mascot-ex6",
                     mascotSize: 130
                 )
@@ -44,6 +44,12 @@ struct SelfEmbraceView: View {
                         .foregroundStyle(Color.white)
                         .monospacedDigit()
                 }
+
+                Text("Если прикосновение к себе сейчас неприятно — просто сиди спокойно и слушай фразы. Практика работает и так.")
+                    .font(.lumi(11, weight: .semibold))
+                    .foregroundStyle(LumiColor.textDim)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(phrases[phraseIndex % phrases.count])
                     .font(.lumi(14, weight: .heavy))

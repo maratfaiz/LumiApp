@@ -41,9 +41,25 @@ targets:
       properties:
         com.apple.developer.applesignin: [Default]
         com.apple.security.application-groups: [group.com.lumi.app.shared]
+    # Свой Info.plist (вместо генерируемого) нужен ровно ради
+    # CFBundleURLTypes: схема lumi:// — это то, чем виджет открывает
+    # нужный экран. Массив словарей через INFOPLIST_KEY_* не задаётся.
+    info:
+      path: LumiApp/Info.plist
+      properties:
+        CFBundleDisplayName: Lumi
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.lumi.app.deeplink
+            CFBundleURLSchemes: [lumi]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lumi.app
+        GENERATE_INFOPLIST_FILE: false
     dependencies:
       - target: LumiWidgetExtension
         embed: true
@@ -66,6 +82,7 @@ targets:
       - path: LumiApp/Core/Models/JournalEntry.swift
       - path: LumiApp/Core/Models/RussianPlural.swift
       - path: LumiApp/Core/Persistence/AppGroup.swift
+      - path: LumiApp/Core/Persistence/DeepLink.swift
       - path: LumiApp/Core/Persistence/CourseCatalog.swift
       - path: LumiApp/Core/Persistence/PersistenceController.swift
       - path: LumiApp/Core/DesignSystem/LumiColor.swift

@@ -76,6 +76,11 @@ struct AchievementsView: View {
                     .font(.lumi(10.5, weight: .semibold))
                     .foregroundStyle(color.opacity(0.8))
                     .fixedSize(horizontal: false, vertical: true)
+                if !achievement.rewardSummary.isEmpty {
+                    Text("Получено: \(achievement.rewardSummary)")
+                        .font(.lumi(10, weight: .bold))
+                        .foregroundStyle(LumiColor.yellow)
+                }
             }
             Spacer(minLength: 0)
         }
@@ -106,6 +111,19 @@ struct AchievementsView: View {
                     .font(.lumi(10.5, weight: .semibold))
                     .foregroundStyle(LumiColor.textFaint2)
                     .fixedSize(horizontal: false, vertical: true)
+                if let progress {
+                    LumiProgressBar(
+                        progress: achievement.progress(progress),
+                        height: 4,
+                        fill: AnyShapeStyle(LumiColor.textDim)
+                    )
+                    .padding(.top, 2)
+                }
+                if !achievement.rewardSummary.isEmpty {
+                    Text("Награда: \(achievement.rewardSummary)")
+                        .font(.lumi(10, weight: .bold))
+                        .foregroundStyle(LumiColor.textTertiary)
+                }
             }
             Spacer(minLength: 0)
         }

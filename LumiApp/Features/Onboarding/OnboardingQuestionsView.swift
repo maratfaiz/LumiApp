@@ -125,8 +125,8 @@ struct OnboardingQuestionsView: View {
 
             VStack(spacing: 8) {
                 ForEach(OnboardingGoal.allCases) { goal in
-                    SelectableOptionRow(icon: goal.icon, title: goal.rawValue, isSelected: viewModel.goal == goal.rawValue) {
-                        withAnimation { viewModel.goal = goal.rawValue }
+                    SelectableOptionRow(icon: goal.icon, title: goal.rawValue, isSelected: viewModel.goal == goal) {
+                        withAnimation { viewModel.goal = goal }
                     }
                 }
             }

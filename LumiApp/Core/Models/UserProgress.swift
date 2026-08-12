@@ -24,8 +24,21 @@ final class UserProgress {
     var equippedMascotSkinID: String?
     var unlockedSecretTechniqueIDs: [String]
     var favoriteAffirmationIDs: [String]
+    /// Свои аффирмации, добавленные пользователем. Попадают в колоду
+    /// наравне с каталожными и автоматически считаются избранными.
+    var customAffirmations: [String]
     /// F33 "Ранняя пташка" — count of lessons finished before 9:00 local time.
     var earlyBirdLessonCount: Int
+    /// Уроки, законченные после 22:00. Показывается в статистике; на
+    /// достижения намеренно не влияет — награждать за ночное использование
+    /// значит подкреплять нарушенный сон и зависимость от приложения.
+    var lateNightLessonCount: Int
+    /// Сколько раз человек возвращался к занятиям после перерыва в 2+ дня.
+    /// Возвращение — то самое поведение, которое стоит подкреплять.
+    var comebackCount: Int
+    /// Сколько практик (дыхание/аффирмации/медитация) доведено до конца —
+    /// считается независимо от того, была ли за них награда.
+    var practiceSessionCount: Int
     /// F13 booster — one extra *rewarded* practice session on a day whose
     /// normal reward for that practice is already used up
     /// (see `PracticeRewardLedger`).
@@ -44,6 +57,13 @@ final class UserProgress {
     /// F30 "Дневник эмоций" (unlocked in the shop) — number of saved
     /// entries, kept here so achievements can read it without a fetch.
     var journalEntryCount: Int
+    /// Уровни, награда за которые уже выдана (`LevelSystem`).
+    var claimedLevelRewards: [Int]
+    /// Достижения, награда за которые уже выдана (`AchievementService`).
+    var claimedAchievementIDs: [String]
+    /// Ответ на 4-й вопрос онбординга — влияет на подбор «Мысли дня» и
+    /// рекомендаций в магазине.
+    var goalRawValue: String?
     /// Q3 onboarding answer, raw PreferredFormat.rawValue. Only controls
     /// which mode tiles (Дыхание/Аффирмации/Медитация) surface on Home —
     /// never gates access, the user can always reach every mode.
@@ -72,12 +92,19 @@ final class UserProgress {
         equippedMascotSkinID: String? = nil,
         unlockedSecretTechniqueIDs: [String] = [],
         favoriteAffirmationIDs: [String] = [],
+        customAffirmations: [String] = [],
         earlyBirdLessonCount: Int = 0,
+        lateNightLessonCount: Int = 0,
+        comebackCount: Int = 0,
+        practiceSessionCount: Int = 0,
         extraDailyTaskTokens: Int = 0,
         lessonHintTokens: Int = 0,
         hintedLessonIDs: [String] = [],
         rewardedPracticeKeys: [String] = [],
         journalEntryCount: Int = 0,
+        claimedLevelRewards: [Int] = [],
+        claimedAchievementIDs: [String] = [],
+        goalRawValue: String? = nil,
         preferredFormatRawValue: String? = nil,
         userDisplayName: String? = nil,
         notifiedAchievementIDs: [String] = []
@@ -97,16 +124,27 @@ final class UserProgress {
         self.equippedMascotSkinID = equippedMascotSkinID
         self.unlockedSecretTechniqueIDs = unlockedSecretTechniqueIDs
         self.favoriteAffirmationIDs = favoriteAffirmationIDs
+        self.customAffirmations = customAffirmations
         self.earlyBirdLessonCount = earlyBirdLessonCount
+        self.lateNightLessonCount = lateNightLessonCount
+        self.comebackCount = comebackCount
+        self.practiceSessionCount = practiceSessionCount
         self.extraDailyTaskTokens = extraDailyTaskTokens
         self.lessonHintTokens = lessonHintTokens
         self.hintedLessonIDs = hintedLessonIDs
         self.rewardedPracticeKeys = rewardedPracticeKeys
         self.journalEntryCount = journalEntryCount
+        self.claimedLevelRewards = claimedLevelRewards
+        self.claimedAchievementIDs = claimedAchievementIDs
+        self.goalRawValue = goalRawValue
         self.preferredFormatRawValue = preferredFormatRawValue
         self.userDisplayName = userDisplayName
         self.notifiedAchievementIDs = notifiedAchievementIDs
     }
 
     var level: Int { GamificationRules.level(forXP: xp) }
+    var levelTitle: String { LevelSystem.title(for: level) }
+    var levelProgress: Double { GamificationRules.levelProgress(currentXP: xp) }
+    var goal: OnboardingGoal? { goalRawValue.flatMap(OnboardingGoal.init(rawValue:)) }
+    var preferredFormat: PreferredFormat? { preferredFormatRawValue.flatMap(PreferredFormat.init(rawValue:)) }
 }

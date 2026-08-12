@@ -48,6 +48,13 @@ struct ModeCompletionView: View {
         }
     }
 
+    private var noRewardText: String {
+        if case .dailyLimitReached(let limit) = reward {
+            return "Сегодня уже \(limit) практики с наградой — завтра снова. Практика всё равно зачтена"
+        }
+        return "Люмены за эту практику сегодня уже начислены — но практика зачтена"
+    }
+
     @ViewBuilder private var rewardPill: some View {
         switch reward {
         case .rewarded(let lumens), .rewardedWithExtraTask(let lumens, _):
@@ -61,8 +68,8 @@ struct ModeCompletionView: View {
             .padding(.vertical, 10)
             .background(Capsule().fill(LumiColor.yellow.opacity(0.14)))
             .overlay(Capsule().stroke(LumiColor.yellow.opacity(0.3), lineWidth: 1))
-        case .alreadyRewardedToday:
-            Text("Люмены за эту практику сегодня уже начислены — но практика зачтена")
+        case .alreadyRewardedToday, .dailyLimitReached:
+            Text(noRewardText)
                 .font(.lumi(12, weight: .semibold))
                 .foregroundStyle(LumiColor.textSecondary)
                 .multilineTextAlignment(.center)
@@ -88,6 +95,8 @@ struct PracticeRewardBadge: View {
             badge(text: "+\(lumens) люменов · доп. задание дня", color: LumiColor.blueChip, icon: "icon-plus")
         case .alreadyRewardedToday:
             badge(text: "Сегодня люмены уже получены", color: LumiColor.textSecondary, icon: "icon-clock")
+        case .dailyLimitReached(let limit):
+            badge(text: "Дневной лимит: \(limit) практики", color: LumiColor.textSecondary, icon: "icon-clock")
         }
     }
 

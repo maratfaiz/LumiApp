@@ -11,14 +11,33 @@ final class JournalEntry {
     var emotionRawValue: String
     /// 1...5 — насколько сильно.
     var intensity: Int
-    /// Что случилось / из-за чего. Может быть пустым.
+    /// Что случилось / из-за чего. Может быть пустым. Хранится с
+    /// markdown-разметкой (`**жирный**`, `_курсив_`) — так запись читается
+    /// и без приложения, и её можно отправить как обычный текст.
     var note: String
+    /// Когда запись меняли в последний раз (nil — не редактировалась).
+    var updatedAt: Date?
 
-    init(createdAt: Date = .now, emotionRawValue: String, intensity: Int, note: String) {
+    init(createdAt: Date = .now, emotionRawValue: String, intensity: Int, note: String, updatedAt: Date? = nil) {
         self.createdAt = createdAt
         self.emotionRawValue = emotionRawValue
         self.intensity = intensity
         self.note = note
+        self.updatedAt = updatedAt
+    }
+
+    /// Текст для «Поделиться» — без разметки, чтобы читалось в любом
+    /// мессенджере.
+    var shareText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "d MMMM, HH:mm"
+        let plainNote = note
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "_", with: "")
+        var lines = ["\(emotionRawValue) · \(intensity)/5", formatter.string(from: createdAt)]
+        if !plainNote.isEmpty { lines.append(contentsOf: ["", plainNote]) }
+        return lines.joined(separator: "\n")
     }
 
     var emotion: JournalEmotion? { JournalEmotion(rawValue: emotionRawValue) }

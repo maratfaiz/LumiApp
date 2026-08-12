@@ -85,7 +85,7 @@ struct CrisisSupportView: View {
 
                     PrimaryButton(title: "Вернуться") { dismiss() }
 
-                    Text("Это не срочно")
+                    Text("Можно просто побыть здесь")
                         .font(.lumi(11, weight: .semibold))
                         .foregroundStyle(LumiColor.textDim)
                 }

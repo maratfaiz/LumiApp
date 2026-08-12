@@ -89,9 +89,20 @@ struct ProfileView: View {
             Text(progress?.userDisplayName ?? "Луми")
                 .font(.lumi(15, weight: .heavy))
                 .foregroundStyle(Color.white)
-            Text("Уровень \(progress?.level ?? 1)")
-                .font(.lumi(11.5, weight: .semibold))
-                .foregroundStyle(LumiColor.textSecondary)
+            HStack(spacing: 6) {
+                Text("Уровень \(progress?.level ?? 1)")
+                    .font(.lumi(11.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.textSecondary)
+                Text("· \(progress?.levelTitle ?? LevelSystem.title(for: 1))")
+                    .font(.lumi(11.5, weight: .heavy))
+                    .foregroundStyle(LumiColor.purpleLight)
+            }
+            if let next = nextLevelReward {
+                Text("Дальше: уровень \(next.level) — \(next.rewardLines.joined(separator: ", "))")
+                    .font(.lumi(10, weight: .semibold))
+                    .foregroundStyle(LumiColor.textDim)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             LumiProgressBar(progress: levelProgress)
                 .padding(.vertical, 4)
             Text(levelCaption)
@@ -103,15 +114,14 @@ struct ProfileView: View {
         .lumiCard(fill: LumiColor.cardFillLight, border: Color.white.opacity(0.08))
     }
 
-    /// Progress through the current level's XP band.
     private var levelProgress: Double {
-        let xp = progress?.xp ?? 0
-        let thresholds = GamificationRules.levelThresholds
-        guard let nextIndex = thresholds.firstIndex(where: { $0 > xp }) else { return 1 }
-        let lower = thresholds[max(nextIndex - 1, 0)]
-        let upper = thresholds[nextIndex]
-        guard upper > lower else { return 1 }
-        return Double(xp - lower) / Double(upper - lower)
+        GamificationRules.levelProgress(currentXP: progress?.xp ?? 0)
+    }
+
+    /// Что даст следующий уровень — чтобы полоска XP была не просто
+    /// украшением.
+    private var nextLevelReward: LevelReward? {
+        LevelSystem.rewards.first { $0.level > (progress?.level ?? 1) }
     }
 
     private var levelCaption: String {
@@ -221,11 +231,20 @@ struct ProfileView: View {
 
     // MARK: Navigation rows
 
+    private var ownsJournal: Bool {
+        guard let item = ShopCatalog.item(id: ShopCatalog.emotionDiaryID) else { return false }
+        return ShopService.isOwned(item, progress: progress)
+    }
+
     private var navRows: some View {
         VStack(spacing: 8) {
             navRow(icon: "icon-shop", fallback: "bag.fill", title: "Магазин") { ShopView() }
             navRow(icon: "icon-stats", fallback: "chart.bar.fill", title: "Статистика") { StatisticsView() }
-            navRow(icon: "icon-journal", fallback: "shippingbox.fill", title: "Инвентарь") { InventoryView() }
+            navRow(icon: "icon-shop", fallback: "shippingbox.fill", title: "Инвентарь") { InventoryView() }
+            if ownsJournal {
+                navRow(icon: "icon-journal", fallback: "book.closed.fill", title: "Дневник эмоций") { EmotionDiaryView() }
+            }
+            navRow(icon: "icon-quote", fallback: "quote.opening", title: "Мои слова") { FavoriteAffirmationsView() }
             navRow(icon: "icon-settings", fallback: "gearshape.fill", title: "Настройки") { SettingsView() }
         }
     }

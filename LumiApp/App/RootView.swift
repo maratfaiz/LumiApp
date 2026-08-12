@@ -8,6 +8,8 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var isSplashVisible = true
+    /// Ссылка из виджета, ожидающая обработки.
+    @State private var pendingLink: DeepLink?
 
     var body: some View {
         ZStack {
@@ -17,7 +19,7 @@ struct RootView: View {
                 SplashView { isSplashVisible = false }
                     .transition(.opacity)
             } else if hasCompletedOnboarding {
-                MainTabView()
+                MainTabView(pendingLink: pendingLink, onLinkHandled: { pendingLink = nil })
                     .transition(.opacity)
             } else {
                 OnboardingFlowView(onFinished: { hasCompletedOnboarding = true })
@@ -28,6 +30,13 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.35), value: hasCompletedOnboarding)
         .preferredColorScheme(.dark)
         .tint(LumiColor.purpleLight)
+        .onOpenURL { url in
+            guard let link = DeepLink(url: url) else { return }
+            // Заставку в этом случае пропускаем: пользователь пришёл с
+            // домашнего экрана за конкретным делом.
+            isSplashVisible = false
+            pendingLink = link
+        }
     }
 }
 

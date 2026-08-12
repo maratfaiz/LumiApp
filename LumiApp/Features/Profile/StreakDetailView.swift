@@ -8,6 +8,9 @@ struct StreakDetailView: View {
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
+    @State private var freezeMessage: String?
+    @State private var confirmFreeze = false
+
     private var calendar: Calendar { .current }
 
     private enum DayState { case done, frozen, today, empty }
@@ -47,6 +50,7 @@ struct StreakDetailView: View {
                 weekStrip
 
                 freezeCard
+                manualFreezeAction
             }
         }
         .navigationTitle("")
@@ -64,7 +68,7 @@ struct StreakDetailView: View {
             return "Серия начнётся с первого урока.\nНачни, когда будешь готов(а)."
         }
         if progress.currentStreakDays >= progress.bestStreakDays {
-            return "Лучшая серия за всё время!\nЕщё немного — и будет рекорд."
+            return "Это твоя самая длинная серия.\nДальше — в своём темпе."
         }
         return "Твой рекорд — \(RussianPlural.days(progress.bestStreakDays)).\nПродолжай в своём темпе."
     }
@@ -181,7 +185,7 @@ struct StreakDetailView: View {
                 Text("Заморозки: \(progress?.streakFreezesAvailable ?? 0)/\(GamificationRules.maxStoredStreakFreezes)")
                     .font(.lumi(13, weight: .heavy))
                     .foregroundStyle(Color.white)
-                Text("Сохранят серию, если пропустишь день — применяются сами")
+                Text("Сработают сами при пропуске — или включи вручную, если знаешь, что сегодня не получится")
                     .font(.lumi(10.5, weight: .semibold))
                     .foregroundStyle(Color(hex: 0x8FA0C9))
                     .fixedSize(horizontal: false, vertical: true)
@@ -190,6 +194,52 @@ struct StreakDetailView: View {
         }
         .padding(13)
         .lumiAccentCard(LumiColor.blueChip, radius: 14)
+    }
+
+    /// Ручное применение заморозки. Кнопка появляется только когда она
+    /// реально что-то даёт: сегодня ещё не было урока и день не защищён.
+    @ViewBuilder private var manualFreezeAction: some View {
+        if let progress {
+            let canFreeze = StreakEngine.canApplyManualFreeze(on: progress)
+            VStack(spacing: 8) {
+                if canFreeze {
+                    SecondaryButton(title: "Заморозить сегодняшний день", systemImage: "snowflake") {
+                        confirmFreeze = true
+                    }
+                }
+                if let freezeMessage {
+                    Text(freezeMessage)
+                        .font(.lumi(11.5, weight: .semibold))
+                        .foregroundStyle(LumiColor.blueChip)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .confirmationDialog(
+                "Использовать заморозку на сегодня?",
+                isPresented: $confirmFreeze,
+                titleVisibility: .visible
+            ) {
+                Button("Заморозить день") { applyFreeze(on: progress) }
+                Button("Отмена", role: .cancel) {}
+            } message: {
+                Text("Спишется одна заморозка, серия продолжится, будто занятие было. Заниматься сегодня всё равно можно.")
+            }
+        }
+    }
+
+    private func applyFreeze(on progress: UserProgress) {
+        switch StreakEngine.applyManualFreeze(on: progress) {
+        case .applied:
+            freezeMessage = "Сегодняшний день защищён — серия не прервётся."
+            WidgetSync.refresh()
+        case .notNeededToday:
+            freezeMessage = "Сегодня уже был урок — заморозка не нужна."
+        case .alreadyFrozen:
+            freezeMessage = "Этот день уже защищён заморозкой."
+        case .noFreezesLeft:
+            freezeMessage = "Заморозок нет — их можно купить в магазине."
+        }
     }
 }
 

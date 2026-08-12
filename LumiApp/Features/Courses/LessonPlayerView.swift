@@ -21,6 +21,9 @@ struct LessonPlayerView: View {
     @State private var answerText = ""
     @State private var showCompletion = false
     @State private var showCrisisSupport = false
+    @State private var newLevels: [LevelReward] = []
+    @State private var newAchievements: [Achievement] = []
+    @State private var showSupportOffer = false
 
     @AppStorage("remindersEnabled") private var remindersEnabled = false
     @AppStorage("reminderHour") private var reminderHour = 19
@@ -130,10 +133,25 @@ struct LessonPlayerView: View {
         // lesson too, so "Далее" lands back on Home/the course instead of
         // on the exercise the user just completed.
         .fullScreenCover(isPresented: $showCompletion, onDismiss: { dismiss() }) {
-            LessonCompletionView(course: course, lesson: lesson)
+            LessonCompletionView(
+                course: course,
+                lesson: lesson,
+                newLevels: newLevels,
+                newAchievements: newAchievements
+            )
         }
         .fullScreenCover(isPresented: $showCrisisSupport) {
             CrisisSupportView()
+        }
+        .confirmationDialog(
+            "Похоже, сейчас правда тяжело",
+            isPresented: $showSupportOffer,
+            titleVisibility: .visible
+        ) {
+            Button("Показать, где можно получить поддержку") { showCrisisSupport = true }
+            Button("Спасибо, продолжу", role: .cancel) {}
+        } message: {
+            Text("Это не диагноз и не оценка — просто напоминание, что помощь рядом, если она понадобится.")
         }
     }
 
@@ -205,10 +223,18 @@ struct LessonPlayerView: View {
     }
 
     private func submit() {
-        if crisisDetector.isCrisisSignal(in: answerText) {
-            // No XP/lumens/streak impact — gamification stops entirely for this interaction.
+        switch crisisDetector.evaluate(answerText) {
+        case .crisis:
+            // Никаких XP/люменов/серии — геймификация полностью
+            // останавливается (Lumi_Crisis_Protocol.docx §2).
             showCrisisSupport = true
             return
+        case .concern:
+            // Тяжело, но прямой угрозы нет: занятие не прерываем и награду
+            // не отбираем — просто предлагаем поддержку после сохранения.
+            showSupportOffer = true
+        case .none:
+            break
         }
 
         let existing = progress ?? {
@@ -227,9 +253,9 @@ struct LessonPlayerView: View {
             existing.xp += GamificationRules.xpPerLesson
             existing.lumens += GamificationRules.lumensPerLesson
             existing.completedLessonIDs.append(lesson.id)
-            if Calendar.current.component(.hour, from: .now) < 9 {
-                existing.earlyBirdLessonCount += 1
-            }
+            let hour = Calendar.current.component(.hour, from: .now)
+            if hour < 9 { existing.earlyBirdLessonCount += 1 }
+            if hour >= 22 { existing.lateNightLessonCount += 1 }
 
             let courseLessonIDs = Set(course.lessons.map(\.id))
             if courseLessonIDs.isSubset(of: Set(existing.completedLessonIDs)) {
@@ -237,6 +263,10 @@ struct LessonPlayerView: View {
                 advanceToNextCourse(existing)
             }
 
+            // Уровни и достижения теперь дают настоящие награды — выдаём
+            // их здесь же, чтобы экран завершения мог их показать.
+            newLevels = LevelSystem.claimPendingRewards(for: existing)
+            newAchievements = AchievementService.claimUnlocked(for: existing)
             notifyNewlyUnlockedAchievements(existing)
         }
 
@@ -249,8 +279,8 @@ struct LessonPlayerView: View {
     }
 
     private func notifyNewlyUnlockedAchievements(_ progress: UserProgress) {
-        for achievement in AchievementCatalog.all
-        where achievement.isUnlocked(progress) && !progress.notifiedAchievementIDs.contains(achievement.id) {
+        for achievement in newAchievements
+        where !progress.notifiedAchievementIDs.contains(achievement.id) {
             progress.notifiedAchievementIDs.append(achievement.id)
             if remindersEnabled {
                 NotificationScheduler.notifyAchievementUnlocked(achievement)

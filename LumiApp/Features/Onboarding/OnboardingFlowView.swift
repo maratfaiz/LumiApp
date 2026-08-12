@@ -15,6 +15,8 @@ struct OnboardingFlowView: View {
             switch viewModel.step {
             case .welcome:
                 WelcomeView(viewModel: viewModel, onContinue: viewModel.advance)
+            case .name:
+                NameStepView(viewModel: viewModel, onContinue: viewModel.advance)
             case .disclaimer:
                 DisclaimerView(onAcknowledge: viewModel.advance)
             case .questions:

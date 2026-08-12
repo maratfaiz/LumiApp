@@ -30,3 +30,6 @@ Pods/
 # see LumiApp/Core/Crisis/README.md
 LumiApp/Resources/CrisisPatterns.json
 *.xcconfig.local
+
+# Генерируется XcodeGen из project.yml
+LumiApp/Info.plist

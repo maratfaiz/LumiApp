@@ -150,6 +150,7 @@ struct LumiStreakWidgetView: View {
                 .padding(.trailing, -6)
                 .padding(.bottom, -8)
         }
+        .widgetURL(DeepLink.streak.url)
         .containerBackground(for: .widget) {
             LumiWidgetGradient.streakWarm
         }
@@ -188,10 +189,10 @@ struct LumiStreakWidgetView: View {
         }
     }
 
-    /// The configured skin wins when the user picked one; otherwise the
-    /// pose follows the widget's state, as in the design.
+    /// Приоритет: образ, выбранный в настройках виджета → образ, надетый
+    /// в приложении → поза по состоянию, как в дизайне.
     private var mascot: Image {
-        if let skinAssetName = entry.skinAssetName {
+        if let skinAssetName = entry.skinAssetName ?? entry.snapshot.equippedSkinAssetName {
             return Image(skinAssetName)
         }
         switch state {

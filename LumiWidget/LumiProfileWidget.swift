@@ -84,13 +84,14 @@ struct LumiProfileWidgetView: View {
             .padding(16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
 
-            Image("mascot-profile")
+            Image(snapshot.equippedSkinAssetName ?? "mascot-profile")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 74, height: 74)
                 .padding(.top, -6)
                 .padding(.trailing, -10)
         }
+        .widgetURL(DeepLink.profile.url)
         .containerBackground(for: .widget) {
             LumiWidgetGradient.deep
         }

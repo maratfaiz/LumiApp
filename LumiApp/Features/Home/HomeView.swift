@@ -45,6 +45,10 @@ struct HomeView: View {
 
                 unlockedTechniques
 
+                if !(progress?.favoriteAffirmationIDs.isEmpty ?? true) {
+                    favoritesCard
+                }
+
                 wardrobePromo
                 quoteOfTheDayCard
             }
@@ -130,29 +134,62 @@ struct HomeView: View {
 
     // MARK: Mode tiles
 
-    private var modeTiles: some View {
-        HStack(spacing: 8) {
-            modeTile(icon: "moon", title: "Дыхание", destination: BreathingView())
-            modeTile(icon: "icon-heart-fill", title: "Аффирмации", destination: AffirmationsView())
-            modeTile(icon: "sun.max", title: "Медитация", destination: MeditationView())
+    /// Порядок практик — это и есть работа 3-го вопроса онбординга:
+    /// выбранный формат ставит подходящую практику первой и помечает её.
+    private var orderedPractices: [Practice] {
+        switch progress?.preferredFormat {
+        case .audio: return [.meditation, .affirmations, .breathing]
+        case .reading: return [.affirmations, .breathing, .meditation]
+        case .interactive, nil: return [.breathing, .affirmations, .meditation]
         }
     }
 
-    private func modeTile(icon: String, title: String, destination: some View) -> some View {
+    private var modeTiles: some View {
+        HStack(spacing: 8) {
+            ForEach(Array(orderedPractices.enumerated()), id: \.element) { index, practice in
+                modeTile(practice: practice, isSuggested: index == 0 && progress?.preferredFormat != nil)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func modeTile(practice: Practice, isSuggested: Bool) -> some View {
+        switch practice {
+        case .breathing:
+            modeTile(icon: "moon", title: practice.title, isSuggested: isSuggested, destination: BreathingView())
+        case .affirmations:
+            modeTile(icon: "icon-heart-fill", title: practice.title, isSuggested: isSuggested, destination: AffirmationsView())
+        case .meditation:
+            modeTile(icon: "sun.max", title: practice.title, isSuggested: isSuggested, destination: MeditationView())
+        }
+    }
+
+    private func modeTile(icon: String, title: String, isSuggested: Bool, destination: some View) -> some View {
         NavigationLink(destination: destination) {
             VStack(spacing: 6) {
                 LumiGlyph(name: icon, size: 17)
-                    .foregroundStyle(LumiColor.purpleLight)
+                    .foregroundStyle(isSuggested ? Color.white : LumiColor.purpleLight)
                 Text(title)
                     .font(.lumi(10, weight: .bold))
-                    .foregroundStyle(LumiColor.textBody)
+                    .foregroundStyle(isSuggested ? Color.white : LumiColor.textBody)
+                if isSuggested {
+                    Text("твой формат")
+                        .font(.lumi(8.5, weight: .bold))
+                        .foregroundStyle(LumiColor.purpleLight)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
         }
         .buttonStyle(.plain)
-        .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isSuggested ? LumiColor.purple1.opacity(0.18) : LumiColor.cardFillLight)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isSuggested ? LumiColor.purple1.opacity(0.5) : LumiColor.cardBorder, lineWidth: 1)
+        )
     }
 
     // MARK: Techniques bought in the shop
@@ -184,6 +221,42 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    /// Избранные аффирмации теперь возвращаются к пользователю сами —
+    /// одна из отмеченных фраз показывается на главной.
+    @ViewBuilder private var favoritesCard: some View {
+        if let affirmation = favoriteOfTheDay {
+            NavigationLink(destination: FavoriteAffirmationsView()) {
+                HStack(alignment: .top, spacing: 11) {
+                    LumiIcon(name: "icon-quote", size: 16, fallbackSystemImage: "quote.opening")
+                        .foregroundStyle(LumiColor.purple1.opacity(0.7))
+                    VStack(alignment: .leading, spacing: 3) {
+                        SectionLabel(text: "Твои слова", color: LumiColor.purpleLight, size: 10)
+                        Text(affirmation.text)
+                            .font(.lumi(12.5, weight: .semibold))
+                            .foregroundStyle(LumiColor.textBright)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(14)
+            }
+            .buttonStyle(.plain)
+            .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
+        }
+    }
+
+    /// Детерминированный выбор по дню — фраза не прыгает при каждом
+    /// обновлении экрана.
+    private var favoriteOfTheDay: Affirmation? {
+        guard let progress else { return nil }
+        let favorites = AffirmationCatalog.fullDeck(custom: progress.customAffirmations)
+            .filter { progress.favoriteAffirmationIDs.contains($0.id) }
+        guard !favorites.isEmpty else { return nil }
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: .now) ?? 1
+        return favorites[dayOfYear % favorites.count]
     }
 
     // MARK: Freeze notice
@@ -255,7 +328,7 @@ struct HomeView: View {
     private var quoteOfTheDayCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionLabel(text: "Мысль дня", color: LumiColor.purpleLight, size: 10)
-            Text(QuoteOfTheDay.current())
+            Text(QuoteOfTheDay.current(goal: progress?.goal))
                 .font(.lumi(13, weight: .medium))
                 .foregroundStyle(Color(hex: 0xF0ECFF))
                 .fixedSize(horizontal: false, vertical: true)

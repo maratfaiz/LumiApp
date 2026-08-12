@@ -17,6 +17,9 @@ struct SettingsView: View {
     @State private var showCrisis = false
     @State private var showDisclaimer = false
     @State private var showPrivacy = false
+    @State private var isEditingName = false
+    @State private var nameDraft = ""
+    @Environment(\.modelContext) private var modelContext
 
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
@@ -45,6 +48,31 @@ struct SettingsView: View {
                     .font(.lumiScreenTitle(24))
                     .foregroundStyle(Color.white)
                     .padding(.bottom, 10)
+
+                Button {
+                    nameDraft = progress?.userDisplayName ?? ""
+                    isEditingName = true
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Как к тебе обращаться")
+                                .font(.lumi(13, weight: .semibold))
+                                .foregroundStyle(LumiColor.textBright)
+                            Text(progress?.userDisplayName ?? "Без имени")
+                                .font(.lumi(11.5, weight: .bold))
+                                .foregroundStyle(LumiColor.purpleLight)
+                        }
+                        Spacer()
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(LumiColor.textDim)
+                    }
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                divider
 
                 HStack {
                     Text("Напоминания и достижения")
@@ -113,6 +141,17 @@ struct SettingsView: View {
         .sheet(isPresented: $showPrivacy) {
             privacySheet
         }
+        .alert("Как к тебе обращаться?", isPresented: $isEditingName) {
+            TextField("Имя", text: $nameDraft)
+            Button("Сохранить") { saveName() }
+            Button("Убрать имя", role: .destructive) {
+                progress?.userDisplayName = nil
+                WidgetSync.refresh()
+            }
+            Button("Отмена", role: .cancel) {}
+        } message: {
+            Text("Имя хранится только на этом устройстве.")
+        }
     }
 
     private var divider: some View {
@@ -138,16 +177,47 @@ struct SettingsView: View {
 
     private var privacySheet: some View {
         LumiScreen {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 Text("Политика конфиденциальности")
                     .font(.lumiScreenTitle(20))
                     .foregroundStyle(Color.white)
-                Text("TODO: текст privacy policy — см. Lumi_MVP_Scope.docx (готовность: текст не готов).")
-                    .font(.lumi(13, weight: .semibold))
-                    .foregroundStyle(LumiColor.textBody)
+                Text("Версия \(PrivacyPolicy.version) · от \(PrivacyPolicy.effectiveDate)")
+                    .font(.lumi(10.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.textDim)
+
+                Text(PrivacyPolicy.summary)
+                    .font(.lumi(13, weight: .heavy))
+                    .foregroundStyle(LumiColor.textBright)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lumiAccentCard(LumiColor.purple1, radius: 14)
+
+                ForEach(PrivacyPolicy.sections) { section in
+                    VStack(alignment: .leading, spacing: 6) {
+                        SectionLabel(text: section.title, color: LumiColor.purpleLight)
+                        Text(section.body)
+                            .font(.lumi(12.5, weight: .semibold))
+                            .foregroundStyle(LumiColor.textBody)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
+                }
             }
         }
+    }
+
+    private func saveName() {
+        let trimmed = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let target = progress ?? {
+            let new = UserProgress()
+            modelContext.insert(new)
+            return new
+        }()
+        target.userDisplayName = trimmed.isEmpty ? nil : trimmed
+        WidgetSync.refresh()
     }
 
     private func setRemindersEnabled(_ enabled: Bool) {

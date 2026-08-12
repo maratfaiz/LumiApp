@@ -19,11 +19,16 @@ enum Practice: String, CaseIterable, Identifiable {
 
 /// Считает, положены ли за практику люмены прямо сейчас.
 ///
-/// Зачем: до этого награда выдавалась за каждую сессию, и +15 люменов можно
-/// было фармить бесконечно, просто заходя в «Дыхание» и выходя — тогда
-/// цены в магазине ничего не значат. Теперь каждая практика приносит
-/// люмены **один раз в день**, а купленный бустер «Доп. задание дня»
-/// разово снимает это ограничение — ради этого его и покупают.
+/// Два ограничения, оба ради баланса (см. `GamificationRules`):
+/// 1. одна практика приносит люмены не чаще раза в день;
+/// 2. всего в день не больше `maxRewardedPracticesPerDay` награждаемых
+///    практик — иначе три практики в день приносили бы больше, чем уроки,
+///    ради которых приложение и существует.
+///
+/// Купленный бустер «Доп. задание дня» разово снимает оба ограничения —
+/// ради этого его и покупают. Практика без награды всё равно доступна и
+/// засчитывается в счётчик практик: ограничение экономическое, а не
+/// запрет заниматься.
 enum PracticeRewardLedger {
 
     enum Outcome: Equatable {
@@ -31,8 +36,17 @@ enum PracticeRewardLedger {
         case rewarded(lumens: Int)
         /// Награда сверх дневной — списан токен «Доп. задание дня».
         case rewardedWithExtraTask(lumens: Int, tokensLeft: Int)
-        /// Сегодня уже получено, докупить нечем.
+        /// Эта практика сегодня уже приносила люмены.
         case alreadyRewardedToday
+        /// Дневной лимит награждаемых практик исчерпан другими практиками.
+        case dailyLimitReached(limit: Int)
+
+        var isRewarded: Bool {
+            switch self {
+            case .rewarded, .rewardedWithExtraTask: return true
+            case .alreadyRewardedToday, .dailyLimitReached: return false
+            }
+        }
     }
 
     static func dayKey(_ date: Date, calendar: Calendar = .current) -> String {
@@ -44,7 +58,6 @@ enum PracticeRewardLedger {
         "\(practice.rawValue)-\(dayKey(date, calendar: calendar))"
     }
 
-    /// Была ли уже выдана обычная (не докупленная) награда за сегодня.
     static func hasBaseReward(
         _ practice: Practice,
         progress: UserProgress,
@@ -54,8 +67,19 @@ enum PracticeRewardLedger {
         progress.rewardedPracticeKeys.contains(baseKey(practice, on: date, calendar: calendar))
     }
 
+    /// Сколько наград уже выдано сегодня (по всем практикам, без учёта
+    /// докупленных за токен — они лимит не занимают).
+    static func rewardsGrantedToday(
+        progress: UserProgress,
+        on date: Date = .now,
+        calendar: Calendar = .current
+    ) -> Int {
+        let day = dayKey(date, calendar: calendar)
+        return progress.rewardedPracticeKeys.filter { $0.hasSuffix(day) }.count
+    }
+
     /// Что пользователь получит, если завершит практику прямо сейчас —
-    /// для честной подписи на экране ещё до финиша.
+    /// чтобы подпись на экране не обещала лишнего.
     static func preview(
         _ practice: Practice,
         progress: UserProgress?,
@@ -65,20 +89,11 @@ enum PracticeRewardLedger {
         guard let progress else {
             return .rewarded(lumens: GamificationRules.lumensPerModeSession)
         }
-        if !hasBaseReward(practice, progress: progress, on: date, calendar: calendar) {
-            return .rewarded(lumens: GamificationRules.lumensPerModeSession)
-        }
-        if progress.extraDailyTaskTokens > 0 {
-            return .rewardedWithExtraTask(
-                lumens: GamificationRules.lumensPerModeSession,
-                tokensLeft: progress.extraDailyTaskTokens - 1
-            )
-        }
-        return .alreadyRewardedToday
+        return evaluate(practice, progress: progress, on: date, calendar: calendar).outcome
     }
 
-    /// Начисляет награду за завершённую сессию, если она положена.
-    /// Возвращает то же, что показал `preview`, и уже применяет изменения.
+    /// Начисляет награду за завершённую сессию, если она положена, и в любом
+    /// случае увеличивает счётчик пройденных практик.
     @discardableResult
     static func grantReward(
         for practice: Practice,
@@ -86,25 +101,73 @@ enum PracticeRewardLedger {
         on date: Date = .now,
         calendar: Calendar = .current
     ) -> Outcome {
+        progress.practiceSessionCount += 1
+
+        let evaluation = evaluate(practice, progress: progress, on: date, calendar: calendar)
         let key = baseKey(practice, on: date, calendar: calendar)
 
-        if !progress.rewardedPracticeKeys.contains(key) {
+        switch evaluation.kind {
+        case .base:
             progress.rewardedPracticeKeys.append(key)
             progress.lumens += GamificationRules.lumensPerModeSession
-            return .rewarded(lumens: GamificationRules.lumensPerModeSession)
+        case .extraTask:
+            progress.extraDailyTaskTokens -= 1
+            let extraIndex = progress.rewardedPracticeKeys.filter { $0.hasPrefix("\(key)-extra") }.count + 1
+            progress.rewardedPracticeKeys.append("\(key)-extra\(extraIndex)")
+            progress.lumens += GamificationRules.lumensPerModeSession
+        case .none:
+            break
         }
 
-        guard progress.extraDailyTaskTokens > 0 else {
-            return .alreadyRewardedToday
+        // Пересчитываем исход уже после списания токена, чтобы «осталось N»
+        // показывало настоящий остаток.
+        switch evaluation.kind {
+        case .extraTask:
+            return .rewardedWithExtraTask(
+                lumens: GamificationRules.lumensPerModeSession,
+                tokensLeft: progress.extraDailyTaskTokens
+            )
+        default:
+            return evaluation.outcome
+        }
+    }
+
+    // MARK: - Общая оценка
+
+    private enum RewardKind { case base, extraTask, none }
+
+    private struct Evaluation {
+        let kind: RewardKind
+        let outcome: Outcome
+    }
+
+    private static func evaluate(
+        _ practice: Practice,
+        progress: UserProgress,
+        on date: Date,
+        calendar: Calendar
+    ) -> Evaluation {
+        let alreadyForThisPractice = hasBaseReward(practice, progress: progress, on: date, calendar: calendar)
+        let limit = GamificationRules.maxRewardedPracticesPerDay
+        let usedToday = rewardsGrantedToday(progress: progress, on: date, calendar: calendar)
+
+        if !alreadyForThisPractice && usedToday < limit {
+            return Evaluation(kind: .base, outcome: .rewarded(lumens: GamificationRules.lumensPerModeSession))
         }
 
-        progress.extraDailyTaskTokens -= 1
-        let extraIndex = progress.rewardedPracticeKeys.filter { $0.hasPrefix("\(key)-extra") }.count + 1
-        progress.rewardedPracticeKeys.append("\(key)-extra\(extraIndex)")
-        progress.lumens += GamificationRules.lumensPerModeSession
-        return .rewardedWithExtraTask(
-            lumens: GamificationRules.lumensPerModeSession,
-            tokensLeft: progress.extraDailyTaskTokens
+        if progress.extraDailyTaskTokens > 0 {
+            return Evaluation(
+                kind: .extraTask,
+                outcome: .rewardedWithExtraTask(
+                    lumens: GamificationRules.lumensPerModeSession,
+                    tokensLeft: progress.extraDailyTaskTokens - 1
+                )
+            )
+        }
+
+        return Evaluation(
+            kind: .none,
+            outcome: alreadyForThisPractice ? .alreadyRewardedToday : .dailyLimitReached(limit: limit)
         )
     }
 }

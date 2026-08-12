@@ -20,14 +20,18 @@ struct ShopView: View {
                 header
                 categoryTiles
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
-                    ForEach(ShopCatalog.items(in: category)) { item in
-                        Button {
-                            selectedItem = item
-                        } label: {
-                            ShopItemCard(item: item, progress: progress)
+                if category == .featured {
+                    recommendations
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
+                        ForEach(ShopCatalog.items(in: category)) { item in
+                            Button {
+                                selectedItem = item
+                            } label: {
+                                ShopItemCard(item: item, progress: progress)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -74,6 +78,53 @@ struct ShopView: View {
             .background(Capsule().fill(LumiColor.yellow.opacity(0.12)))
             .overlay(Capsule().stroke(LumiColor.yellow.opacity(0.3), lineWidth: 1))
             .accessibilityLabel("Баланс: \(progress?.lumens ?? 0) люменов")
+        }
+    }
+
+    /// «Популярное» — не витрина наугад, а ответ на состояние: серия без
+    /// заморозок, ответы онбординга, пустой гардероб и так далее.
+    /// Логика — в `ShopRecommendations`.
+    private var recommendations: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: "Тебе сейчас пригодится", color: LumiColor.purpleLight)
+
+            ForEach(ShopRecommendations.featured(for: progress)) { recommendation in
+                Button {
+                    selectedItem = recommendation.item
+                } label: {
+                    HStack(spacing: 12) {
+                        ShopItemArtwork(item: recommendation.item, size: 46)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(recommendation.item.title)
+                                .font(.lumi(13.5, weight: .heavy))
+                                .foregroundStyle(Color.white)
+                                .multilineTextAlignment(.leading)
+                            Text(recommendation.reason)
+                                .font(.lumi(11, weight: .semibold))
+                                .foregroundStyle(LumiColor.textSecondary)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 6)
+                        if let price = recommendation.item.priceInLumens {
+                            HStack(spacing: 3) {
+                                LumiIcon(name: "icon-lumen", size: 11, fallbackSystemImage: "star.fill")
+                                Text("\(price)")
+                            }
+                            .font(.lumi(12, weight: .heavy))
+                            .foregroundStyle(
+                                ShopService.canPurchase(recommendation.item, progress: progress)
+                                    ? LumiColor.yellow
+                                    : LumiColor.textDim
+                            )
+                        }
+                    }
+                    .padding(13)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
+            }
         }
     }
 

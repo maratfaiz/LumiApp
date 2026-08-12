@@ -11,6 +11,8 @@ struct AffirmationsView: View {
     @State private var viewModel = AffirmationsViewModel()
     @State private var dragOffset: CGFloat = 0
     @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
+    @State private var onlyFavorites = false
+    @State private var showFavorites = false
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -39,6 +41,19 @@ struct AffirmationsView: View {
             if isComplete { grantReward() }
         }
         .onDisappear { viewModel.stopSpeaking() }
+        .onAppear { applyDeck() }
+        .onChange(of: onlyFavorites) { _, _ in applyDeck() }
+        .navigationDestination(isPresented: $showFavorites) { FavoriteAffirmationsView() }
+    }
+
+    /// Колода собирается из каталога и своих фраз; режим «только
+    /// избранные» делает практику по-настоящему персональной.
+    private func applyDeck() {
+        let custom = progress?.customAffirmations ?? []
+        let deck = onlyFavorites
+            ? AffirmationCatalog.favoritesDeck(favoriteIDs: progress?.favoriteAffirmationIDs ?? [], custom: custom)
+            : AffirmationCatalog.fullDeck(custom: custom)
+        viewModel.replaceDeck(deck)
     }
 
     private var player: some View {
@@ -63,6 +78,19 @@ struct AffirmationsView: View {
                             }
                     )
                     .animation(.spring(response: 0.3), value: viewModel.currentIndex)
+
+                HStack(spacing: 8) {
+                    ControlPillButton(
+                        icon: "icon-heart-outline",
+                        label: onlyFavorites ? "Только мои" : "Вся колода",
+                        isActive: onlyFavorites
+                    ) {
+                        onlyFavorites.toggle()
+                    }
+                    ControlPillButton(icon: "icon-quote", label: "Мои слова", isActive: false) {
+                        showFavorites = true
+                    }
+                }
 
                 HStack(spacing: 8) {
                     ControlPillButton(

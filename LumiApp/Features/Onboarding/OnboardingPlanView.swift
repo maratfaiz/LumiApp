@@ -99,6 +99,7 @@ struct OnboardingPlanView: View {
         let progress = UserProgress(
             streakFreezesAvailable: GamificationRules.freeFreezeOnOnboardingComplete,
             currentCourseID: course?.id,
+            goalRawValue: viewModel.goal?.rawValue,
             preferredFormatRawValue: viewModel.preferredFormat?.rawValue,
             userDisplayName: viewModel.userDisplayName
         )

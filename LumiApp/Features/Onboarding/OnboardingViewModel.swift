@@ -2,9 +2,12 @@ import Foundation
 import Observation
 
 enum OnboardingStep: Int, CaseIterable {
-    /// `planLoading` is the design's "Собирается план" beat between the last
-    /// question and the plan reveal — cosmetic, it gates nothing.
-    case welcome, disclaimer, questions, planLoading, plan
+    /// `name` — отдельный шаг «как к тебе обращаться»: Apple отдаёт имя
+    /// только при первой авторизации и только с согласия пользователя,
+    /// поэтому на него нельзя полагаться.
+    /// `planLoading` — косметическая пауза «собирается план», ничего не
+    /// решает.
+    case welcome, name, disclaimer, questions, planLoading, plan
 }
 
 /// Question 2 (problem area) determines the starting course — see
@@ -96,8 +99,10 @@ final class OnboardingViewModel {
     var confidenceRating: Int = 3
     var problemArea: ProblemArea?
     var preferredFormat: PreferredFormat?
-    var goal: String?
-    /// Captured from Sign in with Apple's .fullName scope, if granted.
+    var goal: OnboardingGoal?
+    /// Имя: сначала подставляется из Sign in with Apple (если Apple его
+    /// отдал), затем пользователь подтверждает или меняет его на шаге
+    /// `.name`.
     var userDisplayName: String?
 
     /// Q1 <= 2 always forces course 0, overriding the Q2 answer entirely.

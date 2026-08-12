@@ -25,6 +25,10 @@ struct LumiWidgetSnapshot {
     var level: Int
     var levelProgress: Double
     var lumens: Int
+    /// Образ, надетый в приложении — виджет показывает его же, чтобы
+    /// покупка была видна и на домашнем экране. Со значением по умолчанию,
+    /// чтобы превью виджетов могли не указывать его.
+    var equippedSkinAssetName: String? = nil
 
     /// Shown in Xcode previews and in the widget gallery placeholder.
     static let sample = LumiWidgetSnapshot(
@@ -37,7 +41,8 @@ struct LumiWidgetSnapshot {
         lessonCompletedToday: false,
         level: 3,
         levelProgress: 0.6,
-        lumens: 1230
+        lumens: 1230,
+        equippedSkinAssetName: nil
     )
 
     static let freshStart = LumiWidgetSnapshot(
@@ -50,7 +55,8 @@ struct LumiWidgetSnapshot {
         lessonCompletedToday: false,
         level: 1,
         levelProgress: 0,
-        lumens: 0
+        lumens: 0,
+        equippedSkinAssetName: nil
     )
 }
 
@@ -96,14 +102,7 @@ enum LumiWidgetStore {
             return Double(doneInCourse) / Double(course.lessons.count)
         }()
 
-        let thresholds = GamificationRules.levelThresholds
-        let levelProgress: Double = {
-            guard let nextIndex = thresholds.firstIndex(where: { $0 > progress.xp }) else { return 1 }
-            let lower = thresholds[max(nextIndex - 1, 0)]
-            let upper = thresholds[nextIndex]
-            guard upper > lower else { return 1 }
-            return Double(progress.xp - lower) / Double(upper - lower)
-        }()
+        let levelProgress = GamificationRules.levelProgress(currentXP: progress.xp)
 
         return LumiWidgetSnapshot(
             streakCount: progress.currentStreakDays,
@@ -115,7 +114,8 @@ enum LumiWidgetStore {
             lessonCompletedToday: progress.lessonCompletionDates.contains { calendar.isDate($0, inSameDayAs: today) },
             level: progress.level,
             levelProgress: levelProgress,
-            lumens: progress.lumens
+            lumens: progress.lumens,
+            equippedSkinAssetName: progress.equippedMascotSkinID
         )
     }
 }

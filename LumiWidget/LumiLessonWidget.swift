@@ -41,13 +41,14 @@ struct LumiLessonWidgetView: View {
                 .padding(.vertical, 18)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Image(snapshot.lessonCompletedToday ? "mascot-joy" : "mascot-lesson")
+            Image(snapshot.equippedSkinAssetName ?? (snapshot.lessonCompletedToday ? "mascot-joy" : "mascot-lesson"))
                 .resizable()
                 .scaledToFit()
                 .frame(width: 148, height: 148)
                 .padding(.trailing, -10)
                 .padding(.bottom, -12)
         }
+        .widgetURL(snapshot.lessonCompletedToday ? DeepLink.home.url : DeepLink.lesson.url)
         .containerBackground(for: .widget) {
             LumiWidgetGradient.deep
         }

@@ -12,7 +12,7 @@ final class AffirmationsViewModel: NSObject {
     var speechRate: Float = AVSpeechUtteranceDefaultSpeechRate
 
     private let synthesizer = AVSpeechSynthesizer()
-    private let cards: [Affirmation]
+    private var cards: [Affirmation]
 
     init(cards: [Affirmation] = AffirmationCatalog.all) {
         self.cards = cards
@@ -20,7 +20,19 @@ final class AffirmationsViewModel: NSObject {
         synthesizer.delegate = self
     }
 
-    var current: Affirmation { cards[currentIndex] }
+    var current: Affirmation { cards[min(currentIndex, max(cards.count - 1, 0))] }
+
+    /// Меняет колоду на лету — например, при переключении «только
+    /// избранные». Пустую колоду не принимаем, иначе экран остался бы без
+    /// карточек.
+    func replaceDeck(_ newCards: [Affirmation]) {
+        guard !newCards.isEmpty, newCards.map(\.id) != cards.map(\.id) else { return }
+        stopSpeaking()
+        cards = newCards
+        currentIndex = 0
+        viewedIndices = [0]
+        rewardGranted = false
+    }
     var cardCount: Int { cards.count }
     var isSessionComplete: Bool { viewedIndices.count >= cards.count }
 
