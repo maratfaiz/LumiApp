@@ -54,7 +54,10 @@ struct StreakWidgetConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Образ Луми на виджете"
     static var description = IntentDescription("Выбери, в каком образе Луми появится на виджете.")
 
-    @Parameter(title: "Образ", default: .none)
+    // Явный тип обязателен: с `.none` Swift понимает это как
+    // Optional.none, и настройка виджета по умолчанию оказывается nil
+    // вместо варианта «как на экране».
+    @Parameter(title: "Образ", default: WidgetSkinOption.none)
     var skin: WidgetSkinOption
 }
 
