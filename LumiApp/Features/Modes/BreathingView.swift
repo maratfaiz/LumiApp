@@ -4,136 +4,168 @@ import SwiftUI
 /// F26 — Дыхание. Player: timer, phase indicator, play/pause, repeat
 /// (cycle count), speed, technique info. Reward: +15 lumens, no XP,
 /// granted once when the target cycle count is reached.
+///
+/// The breathing orb, control pills and transport row are ported from the
+/// design's breathing screen — the orb scales with the phase instead of
+/// being a plain progress ring.
 struct BreathingView: View {
     @State private var viewModel = BreathingViewModel()
     @State private var showInfo = false
+    @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
-    private static let speeds: [Double] = [0.75, 1.0, 1.25]
+    private static let speeds: [Double] = [0.75, 1.0, 1.25, 1.5]
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            phaseIndicator
-
-            VStack(spacing: 4) {
-                Text(viewModel.phase.title).font(.lumiTitle)
-                Text("\(Int(viewModel.secondsRemaining.rounded(.up)))")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
-                    .foregroundStyle(LumiColor.accent)
-                    .monospacedDigit()
-            }
-
-            Text("Цикл \(min(viewModel.completedCycles + 1, viewModel.targetCycles)) из \(viewModel.targetCycles)")
-                .font(.lumiCaption)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
+        Group {
             if viewModel.isSessionComplete {
-                completionCard
+                ModeCompletionView(
+                    title: "Дыхание завершено",
+                    subtitle: "Ты сделал(а) \(viewModel.completedCycles) \(RussianPlural.form(viewModel.completedCycles, one: "раунд", few: "раунда", many: "раундов")) 4-7-8. Тело и разум немного спокойнее",
+                    mascotAsset: "mascot-breathcomplete",
+                    reward: reward,
+                    action: { dismiss() }
+                )
             } else {
-                controls
+                player
             }
         }
-        .padding()
-        .navigationTitle("Дыхание")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    showInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showInfo) { infoSheet }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: viewModel.isSessionComplete) { _, isComplete in
             if isComplete { grantReward() }
         }
         .onDisappear { viewModel.pause() }
     }
 
-    private var phaseIndicator: some View {
-        ZStack {
-            Circle()
-                .stroke(LumiColor.border, lineWidth: 8)
-            Circle()
-                .trim(from: 0, to: viewModel.progressWithinPhase)
-                .stroke(LumiColor.accent, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 0.1), value: viewModel.progressWithinPhase)
-            if viewModel.isSessionComplete {
-                Image("mascot-breathcomplete").resizable().scaledToFit().frame(width: 90, height: 90)
-            } else {
-                MascotView(state: .neutral).frame(width: 90, height: 90)
-            }
-        }
-        .frame(width: 200, height: 200)
-    }
+    private var player: some View {
+        LumiScreen {
+            VStack(spacing: 18) {
+                Text(viewModel.phase.title)
+                    .font(.lumiScreenTitle(28))
+                    .foregroundStyle(Color.white)
 
-    private var controls: some View {
-        VStack(spacing: 20) {
-            HStack(spacing: 40) {
-                Button {
-                    viewModel.reset()
-                } label: {
-                    Image(systemName: "arrow.counterclockwise").font(.title2)
-                }
+                orb
 
-                Button {
-                    viewModel.togglePlayPause()
-                } label: {
-                    Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 56))
-                }
-                .tint(LumiColor.accent)
+                Text("Цикл \(min(viewModel.completedCycles + 1, viewModel.targetCycles)) из \(viewModel.targetCycles)")
+                    .font(.lumi(12, weight: .semibold))
+                    .foregroundStyle(LumiColor.textSecondary)
 
-                Menu {
-                    ForEach(Self.speeds, id: \.self) { speed in
-                        Button("\(speed, specifier: "%.2g")×") { viewModel.speed = speed }
+                HStack(spacing: 8) {
+                    ControlPillButton(
+                        icon: "arrow.counterclockwise",
+                        label: "Заново",
+                        isActive: false,
+                        action: viewModel.reset
+                    )
+                    ControlPillButton(icon: "info.circle", label: "Инфо", isActive: showInfo) {
+                        showInfo.toggle()
                     }
-                } label: {
-                    Image(systemName: "speedometer").font(.title2)
+                    ControlPillButton(
+                        icon: "icon-clock",
+                        label: "\(String(format: "%g", viewModel.speed))×",
+                        isActive: viewModel.speed != 1
+                    ) {
+                        cycleSpeed()
+                    }
+                }
+
+                if showInfo {
+                    Text("Вдох на 4 счёта, задержка на 7, выдох на 8. Помогает снизить тревожность и успокоить нервную систему.")
+                        .font(.lumi(11.5, weight: .semibold))
+                        .foregroundStyle(LumiColor.textBright)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lumiAccentCard(LumiColor.purple1, radius: 14)
+                }
+
+                // Порядок ряда: настройки практики (заново / инфо / скорость /
+                // циклы) — сверху, «Начать» — последним. Счётчик циклов
+                // настраивают до запуска, поэтому ему место рядом с
+                // остальными настройками, а не под кнопкой запуска.
+                cyclesStepper
+
+                HStack {
+                    Spacer()
+                    TransportButton(
+                        systemImage: viewModel.isPlaying ? "pause.fill" : "play.fill",
+                        size: 64,
+                        prominent: true,
+                        accessibilityTitle: viewModel.isPlaying ? "Пауза" : "Начать"
+                    ) {
+                        viewModel.togglePlayPause()
+                    }
+                    Spacer()
                 }
             }
-
-            Stepper(
-                "Циклов: \(viewModel.targetCycles)",
-                value: Binding(
-                    get: { viewModel.targetCycles },
-                    set: { viewModel.targetCycles = $0 }
-                ),
-                in: 1...10
-            )
-            .disabled(viewModel.isPlaying)
-            .padding(.horizontal, 32)
+            .frame(maxWidth: .infinity)
         }
     }
 
-    private var completionCard: some View {
-        VStack(spacing: 12) {
-            Text("Отлично! Сессия завершена").font(.lumiHeadline)
-            Text("+15 люменов").font(.lumiBody).foregroundStyle(LumiColor.accent)
-            Button("Ещё раз", action: viewModel.reset)
-                .buttonStyle(.borderedProminent)
-                .tint(LumiColor.accent)
+    /// Scales with the phase: expands on the inhale, holds, contracts on
+    /// the exhale — the design's animated breathing orb.
+    private var orb: some View {
+        let scale = orbScale
+        return ZStack {
+            Circle()
+                .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [4, 5]))
+                .foregroundStyle(LumiColor.textBody.opacity(0.25))
+                .frame(width: 210, height: 210)
+                .scaleEffect(0.82 + scale * 0.18)
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [Color(hex: 0xC9BBFF), LumiColor.purple1.opacity(0.9), LumiColor.purple2],
+                        center: .center, startRadius: 0, endRadius: 105
+                    )
+                )
+                .frame(width: 210, height: 210)
+                .scaleEffect(scale)
+            Text("\(Int(viewModel.secondsRemaining.rounded(.up)))")
+                .font(.lumiScreenTitle(40))
+                .foregroundStyle(Color.white)
+                .monospacedDigit()
+        }
+        .frame(height: 220)
+        .animation(.linear(duration: 0.12), value: viewModel.secondsRemaining)
+    }
+
+    private var orbScale: Double {
+        switch viewModel.phase {
+        case .inhale: return 0.62 + 0.38 * viewModel.progressWithinPhase
+        case .hold: return 1
+        case .exhale: return 1 - 0.38 * viewModel.progressWithinPhase
         }
     }
 
-    private var infoSheet: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Техника 4-7-8").font(.lumiTitle)
-            Text("Вдохните на 4 счёта, задержите дыхание на 7 счётов, выдохните на 8 счётов. Эта техника помогает быстро успокоить нервную систему.")
-                .font(.lumiBody)
+    private var cyclesStepper: some View {
+        HStack {
+            Text("Циклов: \(viewModel.targetCycles)")
+                .font(.lumi(12.5, weight: .bold))
+                .foregroundStyle(LumiColor.textBody)
             Spacer()
+            Stepper("", value: Binding(
+                get: { viewModel.targetCycles },
+                set: { viewModel.targetCycles = $0 }
+            ), in: 1...10)
+            .labelsHidden()
+            .disabled(viewModel.isPlaying)
+            .opacity(viewModel.isPlaying ? 0.5 : 1)
         }
-        .padding()
-        .presentationDetents([.medium])
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .lumiCard(fill: LumiColor.cardFillLight, radius: 12)
+    }
+
+    private func cycleSpeed() {
+        let speeds = Self.speeds
+        let index = speeds.firstIndex(of: viewModel.speed) ?? 1
+        viewModel.speed = speeds[(index + 1) % speeds.count]
     }
 
     private func grantReward() {
@@ -143,12 +175,14 @@ struct BreathingView: View {
             modelContext.insert(new)
             return new
         }()
-        existing.lumens += GamificationRules.lumensPerModeSession
+        reward = PracticeRewardLedger.grantReward(for: .breathing, progress: existing)
         viewModel.markRewardGranted()
+        WidgetSync.refresh()
     }
 }
 
 #Preview {
     NavigationStack { BreathingView() }
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

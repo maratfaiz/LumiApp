@@ -5,6 +5,7 @@ import UserNotifications
 private struct NotificationEntry: Identifiable {
     let id: String
     let icon: String
+    let fallbackIcon: String
     let text: String
     let date: Date?
 }
@@ -17,7 +18,8 @@ private struct NotificationEntry: Identifiable {
 ///
 /// Safety (mandatory per doc): "Серия дней под угрозой — вернитесь
 /// сегодня" is a forbidden anxiety-inducing phrasing — never reintroduce
-/// it. The only sanctioned return-after-miss copy is below.
+/// it, not even from the design mock-up, which still shows that string.
+/// The only sanctioned return-after-miss copy is below.
 struct NotificationsView: View {
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
@@ -30,23 +32,52 @@ struct NotificationsView: View {
             if entries.isEmpty {
                 EmptyStateView(message: "Пока нет уведомлений")
             } else {
-                List(entries) { entry in
-                    HStack(spacing: 12) {
-                        Image(systemName: entry.icon).foregroundStyle(LumiColor.accent)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(entry.text).font(.lumiBody)
-                            if let date = entry.date {
-                                Text(date, style: .relative).font(.lumiCaption).foregroundStyle(.secondary)
-                            }
+                LumiScreen {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Уведомления")
+                            .font(.lumiScreenTitle(24))
+                            .foregroundStyle(Color.white)
+                            .padding(.bottom, 4)
+
+                        LumiMascot(assetName: "mascot-sleeping", size: 130)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 8)
+
+                        ForEach(entries) { entry in
+                            row(entry)
                         }
                     }
-                    .padding(.vertical, 2)
                 }
-                .listStyle(.plain)
             }
         }
-        .navigationTitle("Уведомления")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .task { await loadDelivered() }
+    }
+
+    private func row(_ entry: NotificationEntry) -> some View {
+        HStack(spacing: 11) {
+            ZStack {
+                Circle().fill(LumiColor.purple1.opacity(0.18)).frame(width: 34, height: 34)
+                LumiIcon(name: entry.icon, size: 15, fallbackSystemImage: entry.fallbackIcon)
+                    .foregroundStyle(LumiColor.purpleLight)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.text)
+                    .font(.lumi(13, weight: .semibold))
+                    .foregroundStyle(LumiColor.textBright)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let date = entry.date {
+                    Text(date, style: .relative)
+                        .font(.lumi(10, weight: .semibold))
+                        .foregroundStyle(LumiColor.textDim)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lumiCard(fill: LumiColor.cardFillLight, radius: 12)
     }
 
     private func loadDelivered() async {
@@ -56,9 +87,11 @@ struct NotificationsView: View {
             }
         }
         deliveredEntries = notifications.map { notification in
-            NotificationEntry(
-                id: notification.request.identifier,
-                icon: icon(forIdentifier: notification.request.identifier),
+            let identifier = notification.request.identifier
+            return NotificationEntry(
+                id: identifier,
+                icon: icon(forIdentifier: identifier),
+                fallbackIcon: fallbackIcon(forIdentifier: identifier),
                 text: notification.request.content.body,
                 date: notification.date
             )
@@ -66,6 +99,12 @@ struct NotificationsView: View {
     }
 
     private func icon(forIdentifier identifier: String) -> String {
+        if identifier.hasPrefix("achievement-") { return "icon-trophy" }
+        if identifier == "return-after-miss" { return "icon-magic" }
+        return "icon-bell"
+    }
+
+    private func fallbackIcon(forIdentifier identifier: String) -> String {
         if identifier.hasPrefix("achievement-") { return "rosette" }
         if identifier == "return-after-miss" { return "moon.stars.fill" }
         return "bell.fill"
@@ -84,7 +123,8 @@ struct NotificationsView: View {
             && !deliveredAchievementIDs.contains(where: { $0.hasPrefix("achievement-\(achievement.id)-") }) {
             entries.append(NotificationEntry(
                 id: "synthesized-\(achievement.id)",
-                icon: "rosette",
+                icon: "icon-trophy",
+                fallbackIcon: "rosette",
                 text: "Открыто достижение «\(achievement.title)»",
                 date: nil
             ))
@@ -96,7 +136,8 @@ struct NotificationsView: View {
             if daysSince >= 1 {
                 entries.append(NotificationEntry(
                     id: "synthesized-return-after-miss",
-                    icon: "moon.stars.fill",
+                    icon: "icon-magic",
+                    fallbackIcon: "moon.stars.fill",
                     text: "Луми ждёт тебя, когда будешь готов(а) продолжить",
                     date: lastActive
                 ))
@@ -109,5 +150,6 @@ struct NotificationsView: View {
 
 #Preview {
     NavigationStack { NotificationsView() }
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

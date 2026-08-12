@@ -30,19 +30,41 @@ enum ShopItemUnlock: Hashable {
 struct ShopItem: Identifiable, Hashable {
     let id: String
     let title: String
+    /// Что предмет реально даёт — показывается в карточке товара, чтобы
+    /// покупка не была котом в мешке.
+    let summary: String
     let category: ShopCategory
     let unlock: ShopItemUnlock
     /// Only set for accessories that map to real mascot skin art
     /// (docs/design/prototype/assets/skin-*.png).
     let skinAssetName: String?
+    /// Цветная иллюстрация товара (`item-*` в Assets.xcassets) — для
+    /// бустеров и техник, у которых нет скина.
+    let iconAssetName: String?
     let rarity: AccessoryRarity?
 
-    init(id: String, title: String, category: ShopCategory, unlock: ShopItemUnlock, skinAssetName: String? = nil, rarity: AccessoryRarity? = nil) {
+    init(
+        id: String,
+        title: String,
+        summary: String = "",
+        category: ShopCategory,
+        unlock: ShopItemUnlock,
+        skinAssetName: String? = nil,
+        iconAssetName: String? = nil,
+        rarity: AccessoryRarity? = nil
+    ) {
         self.id = id
         self.title = title
+        self.summary = summary
         self.category = category
         self.unlock = unlock
         self.skinAssetName = skinAssetName
+        self.iconAssetName = iconAssetName
         self.rarity = rarity
+    }
+
+    var priceInLumens: Int? {
+        if case .lumens(let price) = unlock { return price }
+        return nil
     }
 }

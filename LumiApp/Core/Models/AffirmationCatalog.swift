@@ -3,11 +3,18 @@ import Foundation
 struct Affirmation: Identifiable, Hashable {
     let id: String
     let text: String
+    /// Написана пользователем, а не взята из каталога.
+    var isCustom: Bool = false
 }
 
-/// F27 placeholder card copy — UNREVIEWED, pending psychologist/copywriter
-/// approval (same caveat as QuoteOfTheDay). Structure (10+ short,
-/// self-compassion-oriented statements) matches the prototype's card deck.
+/// F27. Колода аффирмаций: каталожные + свои.
+///
+/// Избранное теперь не просто сердечко «в никуда»: отмеченные карточки
+/// собираются в отдельный список, из них можно составить колоду «только
+/// избранные», и они подставляются в карточку «Мысль дня» на главной.
+///
+/// TODO: копирайт написан в согласованном тоне, но психологом/копирайтером
+/// не утверждён (в отличие от `CourseCatalog`) — заменить перед релизом.
 enum AffirmationCatalog {
     static let all: [Affirmation] = [
         Affirmation(id: "aff-1", text: "Я имею право на ошибки — это часть роста."),
@@ -23,4 +30,31 @@ enum AffirmationCatalog {
         Affirmation(id: "aff-11", text: "Моё мнение о себе может быть добрее, чем внутренний критик."),
         Affirmation(id: "aff-12", text: "Отдых — это тоже часть заботы о себе."),
     ]
+
+    static let customIDPrefix = "aff-custom-"
+
+    static func customID(for text: String) -> String {
+        customIDPrefix + String(text.hashValue.magnitude)
+    }
+
+    /// Свои аффирмации как карточки колоды.
+    static func customCards(from texts: [String]) -> [Affirmation] {
+        texts.map { Affirmation(id: customID(for: $0), text: $0, isCustom: true) }
+    }
+
+    /// Полная колода: каталог + свои.
+    static func fullDeck(custom: [String]) -> [Affirmation] {
+        all + customCards(from: custom)
+    }
+
+    /// Колода «только избранные». Если избранного нет — возвращает полную,
+    /// чтобы экран практики никогда не оказался пустым.
+    static func favoritesDeck(favoriteIDs: [String], custom: [String]) -> [Affirmation] {
+        let favorites = fullDeck(custom: custom).filter { favoriteIDs.contains($0.id) || $0.isCustom }
+        return favorites.isEmpty ? fullDeck(custom: custom) : favorites
+    }
+
+    static func affirmation(id: String, custom: [String]) -> Affirmation? {
+        fullDeck(custom: custom).first { $0.id == id }
+    }
 }

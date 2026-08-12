@@ -1,25 +1,25 @@
 import SwiftData
 import SwiftUI
 
-/// Renders the currently-equipped wardrobe skin (F22) over the mascot, or
-/// falls back to the plain MascotView placeholder when nothing's equipped.
-/// Skin artwork itself is real (docs/design/prototype/assets/skin-*.png,
-/// imported into Assets.xcassets); only the base mascot poses are still
-/// SF Symbol placeholders (see MascotView's own doc comment).
+/// Renders the currently-equipped wardrobe skin (F22) on the design's glow
+/// disc, or falls back to the plain `MascotView` pose when nothing's
+/// equipped.
 struct EquippedMascotView: View {
     var state: MascotState = .neutral
+    var size: CGFloat = 150
 
     @Query private var progresses: [UserProgress]
     private var equippedSkinID: String? { progresses.first?.equippedMascotSkinID }
 
     var body: some View {
         if let equippedSkinID {
-            Image(equippedSkinID)
-                .resizable()
-                .scaledToFit()
-                .accessibilityLabel("Луми в образе «\(skinTitle(equippedSkinID))»")
+            LumiMascot(
+                assetName: equippedSkinID,
+                size: size,
+                accessibilityTitle: "Луми в образе «\(skinTitle(equippedSkinID))»"
+            )
         } else {
-            MascotView(state: state)
+            MascotView(state: state, size: size)
         }
     }
 
@@ -29,7 +29,9 @@ struct EquippedMascotView: View {
 }
 
 #Preview {
-    EquippedMascotView()
-        .frame(width: 150, height: 150)
-        .modelContainer(PersistenceController.makePreviewContainer())
+    ZStack {
+        LumiBackground()
+        EquippedMascotView(size: 180)
+    }
+    .modelContainer(PersistenceController.makePreviewContainer())
 }

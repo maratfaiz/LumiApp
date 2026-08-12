@@ -2,7 +2,12 @@ import Foundation
 import Observation
 
 enum OnboardingStep: Int, CaseIterable {
-    case welcome, disclaimer, questions, plan
+    /// `name` — отдельный шаг «как к тебе обращаться»: имя из профиля
+    /// Google приходит не всегда и не обязано совпадать с тем, как человек
+    /// хочет, чтобы к нему обращались, поэтому спрашиваем отдельно.
+    /// `planLoading` — косметическая пауза «собирается план», ничего не
+    /// решает.
+    case welcome, name, disclaimer, questions, planLoading, plan
 }
 
 /// Question 2 (problem area) determines the starting course — see
@@ -25,6 +30,17 @@ enum ProblemArea: String, CaseIterable, Identifiable {
         case .boundaries, .anxietyStress, .other: return 0
         }
     }
+
+    /// Asset-catalog icon from the design's onboarding screen 2/4.
+    var icon: String {
+        switch self {
+        case .selfCriticism: return "icon-critic-voice"
+        case .boundaries: return "icon-clock"
+        case .notGoodEnough: return "icon-heart-outline"
+        case .anxietyStress: return "icon-anxiety"
+        case .other: return "icon-question"
+        }
+    }
 }
 
 /// Question 3 (format) only controls which mode tiles (Дыхание/Аффирмации/
@@ -36,6 +52,45 @@ enum PreferredFormat: String, CaseIterable, Identifiable {
     case interactive = "Интерактивные задания"
 
     var id: String { rawValue }
+
+    /// Longer label used on the onboarding card, per the design.
+    var optionTitle: String {
+        switch self {
+        case .reading: return "Чтение (тексты)"
+        case .audio: return "Аудио (голос, медитация)"
+        case .interactive: return "Интерактивные задания"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .reading: return "icon-book"
+        case .audio: return "icon-headphones"
+        case .interactive: return "icon-tap"
+        }
+    }
+}
+
+/// Question 4 (goal). Stored as free text on `OnboardingViewModel.goal`;
+/// the enum only drives the picker UI, matching the design's 5 options.
+enum OnboardingGoal: String, CaseIterable, Identifiable {
+    case confidence = "Стать увереннее в себе"
+    case lessCritical = "Меньше критиковать себя"
+    case anxietyEase = "Легче справляться с тревогой"
+    case selfWorth = "Начать ценить себя"
+    case other = "Другое"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .confidence: return "icon-target"
+        case .lessCritical: return "icon-smile"
+        case .anxietyEase: return "icon-bolt"
+        case .selfWorth: return "icon-heart-fill"
+        case .other: return "icon-question"
+        }
+    }
 }
 
 @Observable
@@ -44,8 +99,10 @@ final class OnboardingViewModel {
     var confidenceRating: Int = 3
     var problemArea: ProblemArea?
     var preferredFormat: PreferredFormat?
-    var goal: String?
-    /// Captured from Sign in with Apple's .fullName scope, if granted.
+    var goal: OnboardingGoal?
+    /// Имя: сначала подставляется из Sign in with Apple (если Apple его
+    /// отдал), затем пользователь подтверждает или меняет его на шаге
+    /// `.name`.
     var userDisplayName: String?
 
     /// Q1 <= 2 always forces course 0, overriding the Q2 answer entirely.
@@ -58,4 +115,12 @@ final class OnboardingViewModel {
         guard let next = OnboardingStep(rawValue: step.rawValue + 1) else { return }
         step = next
     }
+}
+
+extension UserProgress {
+    /// Ответы онбординга, сохранённые строками, — в виде enum'ов.
+    /// Живут здесь, а не в `UserProgress`: тот файл компилируется ещё и в
+    /// таргете виджета, где этих типов нет.
+    var goal: OnboardingGoal? { goalRawValue.flatMap(OnboardingGoal.init(rawValue:)) }
+    var preferredFormat: PreferredFormat? { preferredFormatRawValue.flatMap(PreferredFormat.init(rawValue:)) }
 }

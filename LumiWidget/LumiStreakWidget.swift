@@ -1,19 +1,13 @@
 import AppIntents
-import SwiftData
 import SwiftUI
 import WidgetKit
 
-/// F24 — home-screen widget, 2 preview states per spec: a normal/baseline
-/// view and one shown once the user has an active streak. Reads the same
-/// SwiftData store as the app via the App Group container (AppGroup.swift,
-/// PersistenceController.swift — shared source files, see project.yml).
+/// F24 — "Серия дней" widget, ported from the design's medium widget with
+/// its three states (нет серии / серия активна / давно не заходил).
 ///
-/// Configurable via App Intents (long-press the widget → Edit Widget) so
-/// the mascot skin shown can be picked without leaving the home screen —
-/// this is the "make widgets from the app" ask: the same skins from the
-/// in-app Wardrobe (F22), rendered here from a copy of the PNGs in this
-/// target's own Assets.xcassets (a widget extension has its own bundle,
-/// it can't reach into the main app's asset catalog by name).
+/// Stays configurable via App Intents (long-press → Edit Widget) so the
+/// mascot skin can be picked from the home screen — the same skins as the
+/// in-app Wardrobe (F22), rendered from this target's own asset catalog.
 enum WidgetSkinOption: String, AppEnum {
     case none
     case classic
@@ -28,7 +22,7 @@ enum WidgetSkinOption: String, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Образ Луми"
     static var caseDisplayRepresentations: [WidgetSkinOption: DisplayRepresentation] = [
-        .none: "Обычная звезда",
+        .none: "Как на экране (по состоянию)",
         .classic: "Классика",
         .sport: "Спортивный костюм",
         .musician: "Музыкант",
@@ -60,102 +54,159 @@ struct StreakWidgetConfigurationIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Образ Луми на виджете"
     static var description = IntentDescription("Выбери, в каком образе Луми появится на виджете.")
 
-    @Parameter(title: "Образ", default: .none)
+    // Явный тип обязателен: с `.none` Swift понимает это как
+    // Optional.none, и настройка виджета по умолчанию оказывается nil
+    // вместо варианта «как на экране».
+    @Parameter(title: "Образ", default: WidgetSkinOption.none)
     var skin: WidgetSkinOption
+}
+
+enum StreakState {
+    /// состояние А — серии ещё нет
+    case fresh
+    /// состояние Б — серия активна
+    case active
+    /// состояние В — давно не заходил (2+ дня)
+    case awaitingReturn
+
+    init(_ snapshot: LumiWidgetSnapshot) {
+        if snapshot.daysSinceLastActive >= 2 {
+            self = .awaitingReturn
+        } else if snapshot.streakCount > 0 {
+            self = .active
+        } else {
+            self = .fresh
+        }
+    }
 }
 
 struct StreakEntry: TimelineEntry {
     let date: Date
-    let currentStreakDays: Int
+    let snapshot: LumiWidgetSnapshot
     let skinAssetName: String?
 }
 
 struct StreakProvider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> StreakEntry {
-        StreakEntry(date: .now, currentStreakDays: 3, skinAssetName: nil)
+        StreakEntry(date: .now, snapshot: .sample, skinAssetName: nil)
     }
 
     func snapshot(for configuration: StreakWidgetConfigurationIntent, in context: Context) async -> StreakEntry {
-        currentEntry(configuration: configuration)
+        StreakEntry(date: .now, snapshot: LumiWidgetStore.load(), skinAssetName: configuration.skin.assetName)
     }
 
     func timeline(for configuration: StreakWidgetConfigurationIntent, in context: Context) async -> Timeline<StreakEntry> {
-        let entry = currentEntry(configuration: configuration)
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 4, to: .now) ?? entry.date.addingTimeInterval(4 * 3600)
-        return Timeline(entries: [entry], policy: .after(nextUpdate))
+        let entry = StreakEntry(date: .now, snapshot: LumiWidgetStore.load(), skinAssetName: configuration.skin.assetName)
+        // Streak state only changes at day boundaries; refresh after midnight.
+        let midnight = Calendar.current.nextDate(
+            after: .now,
+            matching: DateComponents(hour: 0, minute: 5),
+            matchingPolicy: .nextTime
+        ) ?? .now.addingTimeInterval(3600)
+        return Timeline(entries: [entry], policy: .after(midnight))
     }
+}
 
-    private func currentEntry(configuration: StreakWidgetConfigurationIntent) -> StreakEntry {
-        let container = PersistenceController.makeContainer()
-        let context = ModelContext(container)
-        let progress = try? context.fetch(FetchDescriptor<UserProgress>()).first
-        return StreakEntry(
-            date: .now,
-            currentStreakDays: progress?.currentStreakDays ?? 0,
-            skinAssetName: configuration.skin.assetName
-        )
+struct WeekStripView: View {
+    let statuses: [LumiDayStatus]
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(Array(statuses.enumerated()), id: \.offset) { _, status in
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(status == .empty ? Color.white.opacity(0.16) : Color.white.opacity(0.92))
+                    .frame(width: 22, height: 22)
+                    .overlay {
+                        switch status {
+                        case .done:
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .black))
+                                .foregroundStyle(LumiColor.purple2)
+                        case .freeze:
+                            WidgetIcon(name: "icon-freeze", systemFallback: "snowflake", size: 12, color: Color(hex: 0x4A9FE0))
+                        case .empty:
+                            EmptyView()
+                        }
+                    }
+            }
+        }
     }
 }
 
 struct LumiStreakWidgetView: View {
     let entry: StreakEntry
 
+    private var state: StreakState { StreakState(entry.snapshot) }
+
     var body: some View {
-        Group {
-            if entry.currentStreakDays > 0 {
-                streakView
-            } else {
-                normalView
-            }
-        }
-        .containerBackground(for: .widget) {
-            Color(red: 0.07, green: 0.05, blue: 0.16)
-        }
-    }
+        ZStack(alignment: .bottomTrailing) {
+            content
+                .frame(maxWidth: 190, alignment: .leading)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 18)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-    private var normalView: some View {
-        VStack(spacing: 8) {
-            mascotIcon(size: 40, systemFallback: "star.fill", fallbackColor: .purple)
-            Text("Луми")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(.white)
-            Text("Начни серию сегодня")
-                .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.7))
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-    }
-
-    private var streakView: some View {
-        VStack(spacing: 6) {
-            mascotIcon(size: 34, systemFallback: "flame.fill", fallbackColor: .orange)
-            Text("\(entry.currentStreakDays)")
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-            Text(dayLabel)
-                .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.7))
-        }
-        .padding()
-    }
-
-    @ViewBuilder
-    private func mascotIcon(size: CGFloat, systemFallback: String, fallbackColor: Color) -> some View {
-        if let skinAssetName = entry.skinAssetName {
-            Image(skinAssetName)
+            mascot
                 .resizable()
                 .scaledToFit()
-                .frame(width: size, height: size)
-        } else {
-            Image(systemName: systemFallback)
-                .font(.system(size: size * 0.7))
-                .foregroundStyle(fallbackColor)
+                .frame(width: mascotSize, height: mascotSize)
+                .padding(.trailing, -6)
+                .padding(.bottom, -8)
+        }
+        .widgetURL(DeepLink.streak.url)
+        .containerBackground(for: .widget) {
+            LumiWidgetGradient.streakWarm
         }
     }
 
-    private var dayLabel: String {
-        entry.currentStreakDays == 1 ? "день подряд" : "дней подряд"
+    @ViewBuilder private var content: some View {
+        switch state {
+        case .fresh:
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Начни серию\nсегодня")
+                    .font(.lumi(17, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .lineSpacing(2)
+                WeekStripView(statuses: Array(repeating: .empty, count: 7))
+            }
+        case .active:
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    WidgetIcon(name: "icon-streak", systemFallback: "flame.fill", size: 26, color: .white)
+                    Text("\(entry.snapshot.streakCount)")
+                        .font(.lumi(34, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .monospacedDigit()
+                }
+                Text(RussianPlural.daysInARow(entry.snapshot.streakCount))
+                    .font(.lumi(12.5, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.82))
+                WeekStripView(statuses: entry.snapshot.weekStatuses)
+                    .padding(.top, 4)
+            }
+        case .awaitingReturn:
+            Text("Луми ждёт тебя,\nкогда будешь готов(а)\nпродолжить")
+                .font(.lumi(15.5, weight: .bold))
+                .foregroundStyle(.white)
+                .lineSpacing(2)
+        }
+    }
+
+    /// Приоритет: образ, выбранный в настройках виджета → образ, надетый
+    /// в приложении → поза по состоянию, как в дизайне.
+    private var mascot: Image {
+        if let skinAssetName = entry.skinAssetName ?? entry.snapshot.equippedSkinAssetName {
+            return Image(skinAssetName)
+        }
+        switch state {
+        case .fresh: return Image("mascot-welcome")
+        case .active: return Image("mascot-joy")
+        case .awaitingReturn: return Image("mascot-ob1")
+        }
+    }
+
+    private var mascotSize: CGFloat {
+        state == .awaitingReturn ? 118 : 132
     }
 }
 
@@ -167,14 +218,25 @@ struct LumiStreakWidget: Widget {
             LumiStreakWidgetView(entry: entry)
         }
         .configurationDisplayName("Луми — серия дней")
-        .description("Показывает текущую серию дней подряд. Долгий тап по виджету — выбрать образ Луми.")
-        .supportedFamilies([.systemSmall])
+        .description("Текущая серия и повод вернуться сегодня. Долгий тап — выбрать образ Луми.")
+        .supportedFamilies([.systemMedium])
     }
 }
 
-#Preview(as: .systemSmall) {
+#Preview(as: .systemMedium) {
     LumiStreakWidget()
 } timeline: {
-    StreakEntry(date: .now, currentStreakDays: 0, skinAssetName: nil)
-    StreakEntry(date: .now, currentStreakDays: 7, skinAssetName: nil)
+    StreakEntry(date: .now, snapshot: .freshStart, skinAssetName: nil)
+    StreakEntry(date: .now, snapshot: .sample, skinAssetName: nil)
+    StreakEntry(
+        date: .now,
+        snapshot: LumiWidgetSnapshot(
+            streakCount: 4,
+            weekStatuses: [.done, .done, .done, .done, .empty, .empty, .empty],
+            daysSinceLastActive: 3,
+            courseTitle: "", lessonTitle: "", lessonProgress: 0,
+            lessonCompletedToday: false, level: 1, levelProgress: 0, lumens: 0
+        ),
+        skinAssetName: nil
+    )
 }
