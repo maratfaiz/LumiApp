@@ -2,10 +2,10 @@ import Foundation
 import Testing
 @testable import LumiApp
 
-/// До появления этого журнала +15 люменов давались за каждый заход в
-/// практику, и валюту можно было фармить бесконечно. Тесты фиксируют новое
-/// правило: одна награда в день на практику, сверх неё — только за
-/// купленный бустер «Доп. задание дня».
+/// До появления этого журнала люмены давались за каждый заход в практику,
+/// и валюту можно было фармить бесконечно. Тесты фиксируют правило: одна
+/// награда в день на практику и не больше двух награждаемых практик за
+/// день; сверх этого — только за купленный бустер «Доп. задание дня».
 struct PracticeRewardLedgerTests {
     private var utcCalendar: Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -41,19 +41,23 @@ struct PracticeRewardLedgerTests {
         #expect(progress.lumens == GamificationRules.lumensPerModeSession, "фарм повторными заходами закрыт")
     }
 
-    @Test func eachPracticeHasItsOwnDailyReward() {
+    /// Правило дневного лимита: у каждой практики своя награда, но всего
+    /// за день не больше `maxRewardedPracticesPerDay`. Иначе три практики
+    /// приносили бы больше, чем урок, ради которого приложение и сделано.
+    @Test func differentPracticesAreRewardedUpToTheDailyLimit() {
         let calendar = utcCalendar
         let progress = UserProgress(lumens: 0)
         let today = day(0, calendar: calendar)
+        let limit = GamificationRules.maxRewardedPracticesPerDay
 
-        for practice in Practice.allCases {
-            let outcome = PracticeRewardLedger.grantReward(
-                for: practice, progress: progress, on: today, calendar: calendar
-            )
-            #expect(outcome == .rewarded(lumens: GamificationRules.lumensPerModeSession))
+        let outcomes = Practice.allCases.map { practice in
+            PracticeRewardLedger.grantReward(for: practice, progress: progress, on: today, calendar: calendar)
         }
 
-        #expect(progress.lumens == GamificationRules.lumensPerModeSession * Practice.allCases.count)
+        #expect(outcomes.filter(\.isRewarded).count == limit)
+        #expect(outcomes.last == .dailyLimitReached(limit: limit), "третья практика за день уже без люменов")
+        #expect(progress.lumens == GamificationRules.lumensPerModeSession * limit)
+        #expect(progress.practiceSessionCount == Practice.allCases.count, "сама практика засчитывается всегда")
     }
 
     @Test func rewardComesBackTheNextDay() {
