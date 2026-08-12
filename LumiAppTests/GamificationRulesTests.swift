@@ -12,12 +12,30 @@ struct GamificationRulesTests {
 
     @Test func level5At180XP() {
         #expect(GamificationRules.level(forXP: 180) == 5)
-        #expect(GamificationRules.level(forXP: 999) == 5)
+        #expect(GamificationRules.level(forXP: 259) == 5, "уровень держится до следующего порога")
+    }
+
+    /// Лестница выросла с 5 уровней до 10, когда у каждого уровня появилась
+    /// награда (`LevelSystem`). Тест фиксирует потолок: выше десятого не
+    /// уходим, сколько бы XP ни накопили.
+    @Test func tenthLevelIsTheCeiling() {
+        #expect(GamificationRules.level(forXP: 800) == 10)
+        #expect(GamificationRules.level(forXP: 999) == 10)
+        #expect(GamificationRules.levelThresholds.count == 10)
     }
 
     @Test func xpToNextLevel() {
         #expect(GamificationRules.xpToNextLevel(currentXP: 20) == 10)
-        #expect(GamificationRules.xpToNextLevel(currentXP: 180) == nil)
+        #expect(GamificationRules.xpToNextLevel(currentXP: 180) == 80, "с пятого уровня до шестого — 80 XP")
+        #expect(GamificationRules.xpToNextLevel(currentXP: 800) == nil, "выше десятого уровня некуда")
+    }
+
+    /// Каждому уровню, кроме первого, должна соответствовать награда:
+    /// иначе повышение снова станет просто числом на экране.
+    @Test func everyLevelAboveTheFirstHasAReward() {
+        for level in 2...GamificationRules.levelThresholds.count {
+            #expect(LevelSystem.reward(for: level) != nil, "уровень \(level) без награды")
+        }
     }
 }
 
