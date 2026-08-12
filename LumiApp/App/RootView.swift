@@ -31,6 +31,9 @@ struct RootView: View {
         .preferredColorScheme(.dark)
         .tint(LumiColor.purpleLight)
         .onOpenURL { url in
+            // Возврат из браузера после входа в Google приходит сюда же,
+            // что и ссылки виджетов, — сначала отдаём ссылку SDK.
+            if GoogleAuth.handle(url) { return }
             guard let link = DeepLink(url: url) else { return }
             // Заставку в этом случае пропускаем: пользователь пришёл с
             // домашнего экрана за конкретным делом.

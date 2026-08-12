@@ -151,7 +151,12 @@ struct SettingsView: View {
             privacySheet
         }
         .alert("Пройти знакомство заново?", isPresented: $showRestartOnboarding) {
-            Button("Пройти заново") { hasCompletedOnboarding = false }
+            Button("Пройти заново") {
+                // Без выхода из Google экран входа подхватил бы прошлую
+                // сессию и проскочил бы сам собой.
+                GoogleAuth.signOut()
+                hasCompletedOnboarding = false
+            }
             Button("Отмена", role: .cancel) {}
         } message: {
             Text("Ответы на вопросы обновятся. Уроки, серия, люмены и покупки останутся на месте.")

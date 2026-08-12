@@ -5,6 +5,10 @@ import SwiftUI
 struct LumiAppApp: App {
     let modelContainer = PersistenceController.makeContainer()
 
+    init() {
+        GoogleAuth.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

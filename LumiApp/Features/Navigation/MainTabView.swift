@@ -175,16 +175,14 @@ struct CurrentLessonRouteView: View {
 struct LumiTabBar: View {
     @Binding var selected: LumiTab
 
+    /// Все три вкладки — одного размера и на одной линии. В дизайне «Луми»
+    /// была приподнятой кнопкой в круге (`offset(y: -14)`), но выделять
+    /// главный экран нечем: это такая же вкладка, а не отдельное действие.
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            sideTab(icon: "icon-tab-courses", fallback: "book.fill", label: "Курсы", tab: .catalog)
-                .frame(maxWidth: .infinity)
-
-            homeTab
-                .frame(maxWidth: .infinity)
-
-            sideTab(icon: "icon-tab-profile", fallback: "person.fill", label: "Профиль", tab: .profile)
-                .frame(maxWidth: .infinity)
+        HStack(alignment: .top, spacing: 0) {
+            tabButton(icon: "icon-tab-courses", fallback: "book.fill", label: "Курсы", tab: .catalog)
+            tabButton(icon: "sparkle", fallback: "sparkle", label: "Луми", tab: .home)
+            tabButton(icon: "icon-tab-profile", fallback: "person.fill", label: "Профиль", tab: .profile)
         }
         .padding(.horizontal, 6)
         .padding(.top, 10)
@@ -193,46 +191,28 @@ struct LumiTabBar: View {
         .overlay(Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1), alignment: .top)
     }
 
-    private var homeTab: some View {
-        let isActive = selected == .home
-        return Button {
-            selected = .home
-        } label: {
-            VStack(spacing: 2) {
-                ZStack {
-                    Circle()
-                        .fill(isActive ? AnyShapeStyle(LumiGradient.primary) : AnyShapeStyle(Color.white.opacity(0.08)))
-                        .frame(width: 52, height: 52)
-                        .overlay(Circle().stroke(LumiColor.bgCard, lineWidth: 3))
-                        .shadow(color: isActive ? LumiColor.purple2.opacity(0.55) : .clear, radius: 10, y: 6)
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(isActive ? Color.white : LumiColor.textSecondary)
-                }
-                Text("Луми")
-                    .font(.lumi(11, weight: .black))
-                    .foregroundStyle(isActive ? Color.white : LumiColor.textSecondary)
-            }
-        }
-        .buttonStyle(.lumiPlain)
-        .offset(y: -14)
-        .accessibilityLabel("Луми, главный экран")
-    }
-
-    private func sideTab(icon: String, fallback: String, label: String, tab: LumiTab) -> some View {
+    private func tabButton(icon: String, fallback: String, label: String, tab: LumiTab) -> some View {
         let isActive = selected == tab
         return Button {
             selected = tab
         } label: {
             VStack(spacing: 3) {
-                LumiIcon(name: icon, size: 20, fallbackSystemImage: fallback)
+                if icon.hasPrefix("icon-") {
+                    LumiIcon(name: icon, size: 20, fallbackSystemImage: fallback)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: 19, weight: .semibold))
+                        .frame(height: 20)
+                }
                 Text(label).font(.lumi(10, weight: .bold))
             }
             .foregroundStyle(isActive ? LumiColor.purpleLight : LumiColor.textDim)
             .padding(.top, 8)
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.lumiPlain)
         .accessibilityLabel(label)
+        .accessibilityAddTraits(isActive ? [.isSelected] : [])
     }
 }
 
