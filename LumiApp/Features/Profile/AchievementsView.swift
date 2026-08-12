@@ -2,56 +2,121 @@ import SwiftData
 import SwiftUI
 
 /// F33 — 5 of the doc's "актуальный список" achievements are implemented;
-/// 2 others reference an undefined mechanic and 1 more is unnamed in the
-/// source, so they're deliberately left out rather than guessed at (see
-/// AchievementCatalog.swift).
+/// the rest reference an undefined mechanic or are unnamed in the source,
+/// so they're deliberately left out rather than guessed at (see
+/// AchievementCatalog.swift). Split into "открыто" / "впереди" per the
+/// design's achievements screen.
 struct AchievementsView: View {
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
-    @State private var showCourses = false
+
+    private var unlocked: [Achievement] {
+        guard let progress else { return [] }
+        return AchievementCatalog.all.filter { $0.isUnlocked(progress) }
+    }
+
+    private var upcoming: [Achievement] {
+        guard let progress else { return AchievementCatalog.all }
+        return AchievementCatalog.all.filter { !$0.isUnlocked(progress) }
+    }
 
     var body: some View {
         Group {
             if let progress, !progress.completedLessonIDs.isEmpty {
-                List(AchievementCatalog.all) { achievement in
-                    row(for: achievement, progress: progress)
+                LumiScreen {
+                    VStack(alignment: .leading, spacing: 18) {
+                        HStack(alignment: .lastTextBaseline) {
+                            Text("Достижения")
+                                .font(.lumiScreenTitle(22))
+                                .foregroundStyle(Color.white)
+                            Spacer()
+                            Text("\(unlocked.count) из \(AchievementCatalog.all.count)")
+                                .font(.lumi(12, weight: .bold))
+                                .foregroundStyle(LumiColor.textSecondary)
+                        }
+
+                        if !unlocked.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                SectionLabel(text: "Открыто", size: 12)
+                                ForEach(unlocked) { unlockedRow($0) }
+                            }
+                        }
+
+                        if !upcoming.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                SectionLabel(text: "Впереди", size: 12)
+                                ForEach(upcoming) { upcomingRow($0) }
+                            }
+                        }
+                    }
                 }
-                .listStyle(.plain)
             } else {
-                EmptyStateView(
-                    message: "Пока пусто — здесь появятся ваши достижения, как только вы пройдёте первый урок",
-                    actionTitle: "К урокам",
-                    action: { showCourses = true }
-                )
+                EmptyStateView(message: "Здесь появятся ваши достижения, как только вы пройдёте первый урок")
             }
         }
-        .navigationTitle("Достижения")
-        .navigationDestination(isPresented: $showCourses) {
-            CourseListView()
-        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
-    @ViewBuilder private func row(for achievement: Achievement, progress: UserProgress) -> some View {
-        let unlocked = achievement.isUnlocked(progress)
-        HStack(spacing: 12) {
-            Image(systemName: unlocked ? "rosette" : "circle.dashed")
-                .font(.title2)
-                .foregroundStyle(unlocked ? LumiColor.accent : .secondary)
+    private func unlockedRow(_ achievement: Achievement) -> some View {
+        let color = AchievementStyle.color(for: achievement.id)
+        return HStack(spacing: 12) {
+            Circle()
+                .fill(color)
+                .frame(width: 52, height: 52)
+                .overlay(
+                    LumiIcon(name: AchievementStyle.icon(for: achievement.id), size: 20, fallbackSystemImage: "rosette")
+                        .foregroundStyle(Color(hex: 0x2A1A00))
+                )
             VStack(alignment: .leading, spacing: 2) {
-                Text(achievement.title).font(.lumiBody.bold())
-                Text(achievement.conditionDescription).font(.lumiCaption).foregroundStyle(.secondary)
+                Text(achievement.title)
+                    .font(.lumi(13.5, weight: .heavy))
+                    .foregroundStyle(Color.white)
+                Text(achievement.conditionDescription)
+                    .font(.lumi(10.5, weight: .semibold))
+                    .foregroundStyle(color.opacity(0.8))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
-            if unlocked {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-            }
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, 4)
-        .opacity(unlocked ? 1 : 0.6)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lumiAccentCard(color, radius: 14)
+    }
+
+    private func upcomingRow(_ achievement: Achievement) -> some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(LumiColor.cardFillLight)
+                .frame(width: 52, height: 52)
+                .overlay(
+                    Circle()
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [3]))
+                        .foregroundStyle(Color.white.opacity(0.18))
+                )
+                .overlay(
+                    LumiIcon(name: "icon-lock", size: 16, fallbackSystemImage: "lock.fill")
+                        .foregroundStyle(LumiColor.textDim)
+                )
+            VStack(alignment: .leading, spacing: 4) {
+                Text(achievement.title)
+                    .font(.lumi(13.5, weight: .heavy))
+                    .foregroundStyle(LumiColor.textBright)
+                Text(achievement.conditionDescription)
+                    .font(.lumi(10.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.textFaint2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lumiCard(fill: LumiColor.cardFillFaint, border: Color.white.opacity(0.08), radius: 14)
     }
 }
 
 #Preview {
     NavigationStack { AchievementsView() }
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

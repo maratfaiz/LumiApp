@@ -1,8 +1,9 @@
 import SwiftData
 import SwiftUI
 
-/// F22 — Кастомизация / Гардероб: mascot skin picker filterable by rarity.
-/// Owned skins can be equipped directly; locked ones deep-link to the Shop
+/// F22 — Кастомизация / Гардероб: mascot skin picker with a live preview,
+/// rarity filter and a "Надеть образ" CTA, ported from the design's
+/// "Образы Луми" screen. Locked skins deep-link to the Shop
 /// (Lumi_App_Structure.docx: the Home wardrobe card "ведёт в
 /// кастомизацию/магазин").
 struct WardrobeView: View {
@@ -11,41 +12,115 @@ struct WardrobeView: View {
     private var progress: UserProgress? { progresses.first }
 
     @State private var rarityFilter: AccessoryRarity?
+    @State private var previewSkinID: String?
     @State private var showShop = false
 
-    private let columns = [GridItem(.adaptive(minimum: 100), spacing: 16)]
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
 
-    var body: some View {
-        VStack(spacing: 0) {
-            preview
+    private var equippedSkinID: String? { progress?.equippedMascotSkinID }
 
-            Picker("Редкость", selection: $rarityFilter) {
-                Text("Все").tag(AccessoryRarity?.none)
-                ForEach(AccessoryRarity.allCases) { rarity in
-                    Text(rarity.rawValue).tag(AccessoryRarity?.some(rarity))
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding()
-
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(filteredAccessories) { item in
-                        card(for: item)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom)
-            }
-        }
-        .navigationTitle("Гардероб")
-        .navigationDestination(isPresented: $showShop) { ShopView() }
+    private var previewedItem: ShopItem? {
+        ShopCatalog.accessories.first { $0.id == previewSkinID }
     }
 
+    var body: some View {
+        LumiScreen {
+            VStack(spacing: 0) {
+                Text("Образы Луми")
+                    .font(.lumiScreenTitle(26))
+                    .foregroundStyle(Color.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 6)
+                Text("Выбери образ, который отражает тебя")
+                    .font(.lumi(12.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 18)
+
+                preview
+                    .padding(.bottom, 18)
+
+                filterRow
+                    .padding(.bottom, 14)
+
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(filteredAccessories) { item in
+                        skinCard(item)
+                    }
+                }
+
+                if let previewedItem, previewedItem.id != equippedSkinID {
+                    PrimaryButton(
+                        title: isOwned(previewedItem) ? "Надеть образ" : "Открыть в магазине",
+                        isEnabled: true
+                    ) {
+                        if isOwned(previewedItem) {
+                            equip(previewedItem)
+                        } else {
+                            showShop = true
+                        }
+                    }
+                    .padding(.top, 14)
+                }
+            }
+        }
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(isPresented: $showShop) { ShopView() }
+        .onAppear {
+            if previewSkinID == nil { previewSkinID = equippedSkinID }
+        }
+    }
+
+    // MARK: Preview
+
     private var preview: some View {
-        EquippedMascotView()
-            .frame(width: 140, height: 140)
-            .padding(.top, 16)
+        VStack(spacing: 8) {
+            if let previewSkinID, previewSkinID != equippedSkinID, isOwnedID(previewSkinID) {
+                LumiMascot(assetName: previewSkinID, size: 140)
+            } else {
+                EquippedMascotView(size: 140)
+            }
+        }
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(
+                    RadialGradient(
+                        colors: [Color(hex: 0x2A1D52), Color(hex: 0x150F30)],
+                        center: UnitPoint(x: 0.5, y: 0.35), startRadius: 0, endRadius: 160
+                    )
+                )
+        )
+    }
+
+    // MARK: Filter
+
+    private var filterRow: some View {
+        HStack(spacing: 6) {
+            filterChip(title: "Все", value: nil)
+            ForEach(AccessoryRarity.allCases) { rarity in
+                filterChip(title: rarity.rawValue, value: rarity)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func filterChip(title: String, value: AccessoryRarity?) -> some View {
+        let isActive = rarityFilter == value
+        return Button {
+            rarityFilter = value
+        } label: {
+            Text(title)
+                .font(.lumi(11.5, weight: isActive ? .heavy : .bold))
+                .foregroundStyle(isActive ? Color.white : LumiColor.textSecondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+        .background(Capsule().fill(isActive ? LumiColor.purple1.opacity(0.3) : LumiColor.cardFillLight))
+        .overlay(Capsule().stroke(isActive ? LumiColor.purple1.opacity(0.6) : LumiColor.cardBorder, lineWidth: 1))
     }
 
     private var filteredAccessories: [ShopItem] {
@@ -53,32 +128,109 @@ struct WardrobeView: View {
         return ShopCatalog.accessories.filter { $0.rarity == rarityFilter }
     }
 
-    @ViewBuilder private func card(for item: ShopItem) -> some View {
+    // MARK: Grid
+
+    @ViewBuilder
+    private func skinCard(_ item: ShopItem) -> some View {
         let owned = isOwned(item)
-        let equipped = progress?.equippedMascotSkinID == item.id
-        VStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(equipped ? LumiColor.accent.opacity(0.25) : LumiColor.accentSoft)
-                    .frame(height: 90)
-                if owned, let assetName = item.skinAssetName {
-                    Image(assetName).resizable().scaledToFit().padding(8)
-                } else {
-                    Image(systemName: "lock.fill").foregroundStyle(.secondary)
+        let equipped = item.id == equippedSkinID
+        let previewed = item.id == previewSkinID
+        let tint = rarityColor(item.rarity)
+        let borderColor = equipped ? LumiColor.yellow : (previewed ? LumiColor.purple1 : tint.opacity(0.6))
+        let fillColor = equipped ? LumiColor.yellow.opacity(0.1) : (previewed ? LumiColor.purple1.opacity(0.14) : tint.opacity(0.08))
+
+        Button {
+            previewSkinID = item.id
+        } label: {
+            VStack(spacing: 5) {
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(LumiColor.cardFillLight)
+                        .aspectRatio(1, contentMode: .fit)
+
+                    if let skin = item.skinAssetName {
+                        Image(skin)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(6)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+
+                    if let rarity = item.rarity {
+                        Text(rarity.rawValue.uppercased())
+                            .font(.system(size: 7, weight: .heavy))
+                            .foregroundStyle(Color(hex: 0x1A1530))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(tint)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .offset(x: 4, y: 4)
+                    }
+
+                    if !owned {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(hex: 0x0A0819).opacity(0.55))
+                            .overlay(
+                                LumiIcon(name: "icon-lock", size: 18, fallbackSystemImage: "lock.fill")
+                                    .foregroundStyle(LumiColor.textTertiary)
+                            )
+                            .aspectRatio(1, contentMode: .fit)
+                    }
+
+                    if equipped {
+                        ZStack {
+                            Circle().fill(LumiColor.yellow)
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundStyle(Color(hex: 0x3A2400))
+                        }
+                        .frame(width: 18, height: 18)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .offset(x: -4, y: 4)
+                    }
                 }
+
+                Text(item.title)
+                    .font(.lumi(10, weight: .bold))
+                    .foregroundStyle(LumiColor.textBright)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .frame(minHeight: 24, alignment: .top)
+
+                Text(statusLabel(for: item, owned: owned, equipped: equipped))
+                    .font(.lumi(9, weight: .bold))
+                    .foregroundStyle(equipped ? LumiColor.yellow : (owned ? LumiColor.textSecondary : LumiColor.blueChip))
             }
-            Text(item.title).font(.lumiCaption).lineLimit(1)
-            if let rarity = item.rarity {
-                Text(rarity.rawValue).font(.system(size: 10)).foregroundStyle(.secondary)
-            }
+            .padding(7)
         }
-        .onTapGesture {
-            if owned {
-                progress?.equippedMascotSkinID = item.id
-            } else {
-                showShop = true
-            }
+        .buttonStyle(.plain)
+        .background(RoundedRectangle(cornerRadius: 12).fill(fillColor))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(borderColor, lineWidth: equipped || previewed ? 2 : 1.5))
+    }
+
+    private func statusLabel(for item: ShopItem, owned: Bool, equipped: Bool) -> String {
+        if equipped { return "Надет" }
+        if owned { return "Доступен" }
+        switch item.unlock {
+        case .lessonsCompleted(let required):
+            return "\(progress?.completedLessonIDs.count ?? 0)/\(required) уроков"
+        case .lumens:
+            return "В магазине →"
         }
+    }
+
+    private func rarityColor(_ rarity: AccessoryRarity?) -> Color {
+        switch rarity {
+        case .common: return LumiColor.textSecondary
+        case .rare: return Color(hex: 0x5B9FFF)
+        case .epic: return Color(hex: 0xFF6EC7)
+        case nil: return LumiColor.purpleLight
+        }
+    }
+
+    private func isOwnedID(_ id: String) -> Bool {
+        guard let item = ShopCatalog.accessories.first(where: { $0.id == id }) else { return false }
+        return isOwned(item)
     }
 
     private func isOwned(_ item: ShopItem) -> Bool {
@@ -88,9 +240,20 @@ struct WardrobeView: View {
         }
         return progress.unlockedMascotSkinIDs.contains(item.id)
     }
+
+    private func equip(_ item: ShopItem) {
+        let existing = progress ?? {
+            let new = UserProgress()
+            modelContext.insert(new)
+            return new
+        }()
+        existing.equippedMascotSkinID = item.id
+        WidgetSync.refresh()
+    }
 }
 
 #Preview {
     NavigationStack { WardrobeView() }
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

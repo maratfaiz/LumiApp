@@ -13,25 +13,86 @@ struct OnboardingPlanView: View {
         CourseCatalog.courses.first { $0.number == viewModel.recommendedCourseNumber }
     }
 
+    private var firstLesson: Lesson? {
+        course?.lessons.first
+    }
+
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            Image("mascot-obtrack")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 140, height: 140)
-            Text("Начнём с курса «\(course?.title ?? "")»")
-                .font(.lumiHeadline)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            Spacer()
-            Button("Начать первый урок") {
-                grantOnboardingRewardsAndFinish()
+        LumiFixedScreen(stars: StarPresets.celebration) {
+            VStack(spacing: 0) {
+                LumiMascot(assetName: "mascot-obtrack", size: 200)
+                    .padding(.bottom, 18)
+
+                Text("Твой персональный план готов!")
+                    .font(.lumiScreenTitle(24))
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 12)
+
+                Text("Мы нашли курс, который поможет тебе чувствовать себя увереннее и поддержит на этом пути")
+                    .font(.lumi(14, weight: .semibold))
+                    .foregroundStyle(LumiColor.textBody)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 22)
+
+                planRow(
+                    icon: "star.fill",
+                    iconTint: LumiColor.purpleLight,
+                    iconBackground: LumiColor.purple1.opacity(0.25),
+                    caption: "Стартовый курс",
+                    title: "\(course?.title ?? "") · \(RussianPlural.lessons(course?.lessons.count ?? 0))"
+                )
+                .padding(.bottom, 12)
+
+                planRow(
+                    icon: "checkmark",
+                    iconTint: LumiColor.textBody,
+                    iconBackground: Color.white.opacity(0.08),
+                    caption: "Твой первый урок",
+                    title: firstLesson?.title ?? ""
+                )
+                .padding(.bottom, 16)
+
+                HStack(spacing: 6) {
+                    LumiIcon(name: "icon-freeze", size: 14, fallbackSystemImage: "snowflake")
+                    Text("+" + RussianPlural.freezes(GamificationRules.freeFreezeOnOnboardingComplete) + " дня")
+                }
+                .font(.lumi(13, weight: .bold))
+                .foregroundStyle(LumiColor.blueChip)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(Capsule().fill(LumiColor.blueStrong.opacity(0.15)))
+                .overlay(Capsule().stroke(LumiColor.blueStrong.opacity(0.3), lineWidth: 1))
+
+                Spacer(minLength: 16)
+
+                PrimaryButton(title: "Начать первый урок →") {
+                    grantOnboardingRewardsAndFinish()
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(LumiColor.accent)
-            .padding(.bottom, 32)
         }
+    }
+
+    private func planRow(icon: String, iconTint: Color, iconBackground: Color, caption: String, title: String) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12).fill(iconBackground).frame(width: 40, height: 40)
+                Image(systemName: icon).foregroundStyle(iconTint)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                SectionLabel(text: caption, size: 10)
+                Text(title)
+                    .font(.lumi(15, weight: .heavy))
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .lumiCard()
     }
 
     private func grantOnboardingRewardsAndFinish() {
@@ -42,11 +103,13 @@ struct OnboardingPlanView: View {
             userDisplayName: viewModel.userDisplayName
         )
         modelContext.insert(progress)
+        WidgetSync.refresh()
         onFinished()
     }
 }
 
 #Preview {
     OnboardingPlanView(viewModel: OnboardingViewModel(), onFinished: {})
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

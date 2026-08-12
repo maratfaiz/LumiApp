@@ -1,105 +1,162 @@
 import SwiftData
 import SwiftUI
 
-/// F27 — swipeable affirmation cards, favorite, optional read-aloud, repeat,
+/// F27 — swipeable affirmation cards, favorite, optional read-aloud,
 /// speed control. Reward: +15 lumens per session, granted once the user
 /// has swiped through every card in the deck.
+///
+/// Card, control pills and transport row ported from the design's
+/// affirmations screen.
 struct AffirmationsView: View {
     @State private var viewModel = AffirmationsViewModel()
     @State private var dragOffset: CGFloat = 0
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Query private var progresses: [UserProgress]
     private var progress: UserProgress? { progresses.first }
 
+    private static let speechRates: [Float] = [0.4, 0.5, 0.6]
+
     var body: some View {
-        VStack(spacing: 24) {
-            Text("\(viewModel.currentIndex + 1) из \(viewModel.cardCount)")
-                .font(.lumiCaption)
-                .foregroundStyle(.secondary)
-
-            card
-                .offset(x: dragOffset)
-                .gesture(
-                    DragGesture()
-                        .onChanged { dragOffset = $0.translation.width }
-                        .onEnded { value in
-                            if value.translation.width < -60 {
-                                viewModel.next()
-                            } else if value.translation.width > 60 {
-                                viewModel.previous()
-                            }
-                            dragOffset = 0
-                        }
-                )
-                .animation(.spring(response: 0.3), value: viewModel.currentIndex)
-
-            HStack(spacing: 32) {
-                Button { viewModel.previous() } label: {
-                    Image(systemName: "chevron.left.circle.fill").font(.system(size: 36))
-                }
-
-                Button { viewModel.speakCurrent() } label: {
-                    Image(systemName: viewModel.isSpeaking ? "waveform.circle.fill" : "speaker.wave.2.circle.fill")
-                        .font(.system(size: 36))
-                }
-
-                Menu {
-                    Button("Медленнее") { viewModel.speechRate = max(viewModel.speechRate - 0.1, 0.2) }
-                    Button("Быстрее") { viewModel.speechRate = min(viewModel.speechRate + 0.1, 0.6) }
-                } label: {
-                    Image(systemName: "speedometer").font(.system(size: 28))
-                }
-
-                Button { viewModel.next() } label: {
-                    Image(systemName: "chevron.right.circle.fill").font(.system(size: 36))
-                }
-            }
-            .tint(LumiColor.accent)
-
+        Group {
             if viewModel.isSessionComplete {
-                completionBanner
+                ModeCompletionView(
+                    title: "Сеанс завершён",
+                    subtitle: "Ты повторил(а) все \(viewModel.cardCount) аффирмаций. Пусть эти слова останутся с тобой сегодня",
+                    mascotAsset: "mascot-affirmcomplete",
+                    action: { dismiss() }
+                )
+            } else {
+                player
             }
         }
-        .padding()
-        .navigationTitle("Аффирмации")
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: viewModel.isSessionComplete) { _, isComplete in
             if isComplete { grantReward() }
         }
         .onDisappear { viewModel.stopSpeaking() }
     }
 
-    private var card: some View {
-        VStack(spacing: 20) {
-            MascotView(state: .neutral).frame(width: 80, height: 80)
-            Text(viewModel.current.text)
-                .font(.lumiHeadline)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 16)
+    private var player: some View {
+        LumiScreen {
+            VStack(spacing: 18) {
+                Spacer(minLength: 8)
 
-            Button {
-                toggleFavorite()
-            } label: {
-                Image(systemName: isCurrentFavorite ? "heart.fill" : "heart")
-                    .foregroundStyle(isCurrentFavorite ? .red : .secondary)
-                    .font(.title2)
+                card
+                    .offset(x: dragOffset)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { dragOffset = $0.translation.width }
+                            .onEnded { value in
+                                if value.translation.width < -60 {
+                                    viewModel.next()
+                                } else if value.translation.width > 60 {
+                                    viewModel.previous()
+                                }
+                                dragOffset = 0
+                            }
+                    )
+                    .animation(.spring(response: 0.3), value: viewModel.currentIndex)
+
+                HStack(spacing: 8) {
+                    ControlPillButton(
+                        icon: "speaker.wave.2.fill",
+                        label: viewModel.isSpeaking ? "Читаю" : "Прочитать",
+                        isActive: viewModel.isSpeaking
+                    ) {
+                        viewModel.isSpeaking ? viewModel.stopSpeaking() : viewModel.speakCurrent()
+                    }
+                    ControlPillButton(
+                        icon: "icon-heart-fill",
+                        label: isCurrentFavorite ? "В избранном" : "В избранное",
+                        isActive: isCurrentFavorite,
+                        action: toggleFavorite
+                    )
+                    ControlPillButton(
+                        icon: "icon-clock",
+                        label: "\(String(format: "%g", speedMultiplier))×",
+                        isActive: viewModel.speechRate != 0.5,
+                        action: cycleSpeechRate
+                    )
+                }
+
+                HStack {
+                    TransportButton(systemImage: "chevron.left", accessibilityTitle: "Предыдущая") {
+                        viewModel.previous()
+                    }
+                    Spacer()
+                    TransportButton(
+                        systemImage: viewModel.isSpeaking ? "pause.fill" : "play.fill",
+                        size: 64,
+                        prominent: true,
+                        accessibilityTitle: viewModel.isSpeaking ? "Остановить чтение" : "Прочитать вслух"
+                    ) {
+                        viewModel.isSpeaking ? viewModel.stopSpeaking() : viewModel.speakCurrent()
+                    }
+                    Spacer()
+                    TransportButton(systemImage: "chevron.right", accessibilityTitle: "Следующая") {
+                        viewModel.next()
+                    }
+                }
+
+                Spacer(minLength: 8)
             }
+            .frame(maxWidth: .infinity)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, minHeight: 260)
-        .background(LumiColor.accentSoft, in: RoundedRectangle(cornerRadius: 20))
     }
 
-    private var completionBanner: some View {
-        VStack(spacing: 8) {
-            Image("mascot-affirmcomplete").resizable().scaledToFit().frame(width: 70, height: 70)
-            Text("Ты прошёл(ла) всю колоду!").font(.lumiBody.bold())
-            Text("+15 люменов").font(.lumiCaption).foregroundStyle(LumiColor.accent)
+    private var card: some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 22)
+                .fill(
+                    LinearGradient(
+                        colors: [LumiColor.purple1.opacity(0.22), LumiColor.purple2.opacity(0.08)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(LumiColor.purple1.opacity(0.3), lineWidth: 1))
+
+            LumiIcon(name: "icon-quote", size: 28, fallbackSystemImage: "quote.opening")
+                .foregroundStyle(LumiColor.purple1.opacity(0.35))
+                .padding(16)
+
+            VStack(spacing: 12) {
+                Text("«\(viewModel.current.text)»")
+                    .font(.lumi(20, weight: .heavy))
+                    .foregroundStyle(Color.white)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 24)
+
+                Text("\(viewModel.currentIndex + 1) из \(viewModel.cardCount)")
+                    .font(.lumi(11.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.textSecondary)
+
+                if isCurrentFavorite {
+                    LumiIcon(name: "icon-heart-fill", size: 16, fallbackSystemImage: "heart.fill")
+                        .foregroundStyle(Color(hex: 0xFF7A94))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 40)
         }
+        .frame(minHeight: 240)
+    }
+
+    private var speedMultiplier: Double {
+        Double(viewModel.speechRate / 0.5)
     }
 
     private var isCurrentFavorite: Bool {
         progress?.favoriteAffirmationIDs.contains(viewModel.current.id) ?? false
+    }
+
+    private func cycleSpeechRate() {
+        let rates = Self.speechRates
+        let index = rates.firstIndex(of: viewModel.speechRate) ?? 1
+        viewModel.speechRate = rates[(index + 1) % rates.count]
     }
 
     private func toggleFavorite() {
@@ -125,10 +182,12 @@ struct AffirmationsView: View {
         }()
         existing.lumens += GamificationRules.lumensPerModeSession
         viewModel.markRewardGranted()
+        WidgetSync.refresh()
     }
 }
 
 #Preview {
     NavigationStack { AffirmationsView() }
+        .preferredColorScheme(.dark)
         .modelContainer(PersistenceController.makePreviewContainer())
 }

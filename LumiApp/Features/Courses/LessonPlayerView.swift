@@ -1,11 +1,14 @@
 import SwiftData
 import SwiftUI
 
-/// F8 — explanation → exercise (free text here; some lessons use choice/slider
-/// per the spec, add variants as content requires it) → example. On submit,
-/// user text is checked against the crisis detector *before* anything else
-/// happens — a crisis match must short-circuit straight to CrisisSupportView
-/// with zero rewards granted (Lumi_Crisis_Protocol.docx §2).
+/// F8 — explanation → exercise → example. On submit, user text is checked
+/// against the crisis detector *before* anything else happens — a crisis
+/// match must short-circuit straight to CrisisSupportView with zero rewards
+/// granted (Lumi_Crisis_Protocol.docx §2).
+///
+/// Layout ported from the design's lesson + exercise screens: lesson
+/// progress bar, per-mechanic mascot pose, explanation card, exercise, and
+/// the always-available "мне сейчас тяжело" escape hatch above the CTA.
 struct LessonPlayerView: View {
     let course: Course
     let lesson: Lesson
@@ -25,10 +28,9 @@ struct LessonPlayerView: View {
 
     private let crisisDetector = CrisisDetector()
 
-    /// Reuses the prototype's own per-mechanic mascot pose
-    /// (docs/design/prototype/assets/mascot-ex1..ex10.png, already in
-    /// Assets.xcassets) so each exercise type visually matches how it
-    /// looked in Lumi_Prototype.dc.html, instead of one static image.
+    /// Reuses the design's own per-mechanic mascot pose (mascot-ex1…ex10),
+    /// so each exercise type visually matches how it looked in the
+    /// prototype, instead of one static image.
     private var mascotAssetName: String {
         switch lesson.exerciseKind {
         case .freeText: return "mascot-lesson"
@@ -47,35 +49,92 @@ struct LessonPlayerView: View {
         }
     }
 
+    private var lessonProgress: Double {
+        guard !course.lessons.isEmpty else { return 0 }
+        return Double(lesson.indexInCourse) / Double(course.lessons.count)
+    }
+
+    private var isAnswerEmpty: Bool {
+        answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Image(mascotAssetName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 110, height: 110)
+        LumiScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Урок \(lesson.indexInCourse) из \(course.lessons.count)")
+                        .font(.lumi(11, weight: .bold))
+                        .foregroundStyle(LumiColor.textTertiary)
+                    Spacer()
+                    LumiIcon(name: "icon-heart-fill", size: 15, fallbackSystemImage: "heart.fill")
+                        .foregroundStyle(Color(hex: 0xFF7A94))
+                }
+                .padding(.bottom, 6)
+
+                LumiProgressBar(progress: lessonProgress)
+                    .padding(.bottom, 16)
+
+                LumiMascot(assetName: mascotAssetName, size: 110)
                     .frame(maxWidth: .infinity)
+                    .padding(.bottom, 12)
 
-                Text(lesson.title).font(.lumiTitle)
-                Text(lesson.explanation).font(.lumiBody)
+                Text(lesson.title)
+                    .font(.lumiScreenTitle(20))
+                    .foregroundStyle(Color.white)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 10)
 
-                Text(lesson.exercisePrompt).font(.lumiHeadline)
+                Text(lesson.explanation)
+                    .font(.lumiBody)
+                    .lumiRounded()
+                    .foregroundStyle(LumiColor.textBody)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(15)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lumiCard(radius: 14)
+                    .padding(.bottom, 20)
+
+                Text(lesson.exercisePrompt)
+                    .font(.lumiHeadline)
+                    .lumiRounded()
+                    .foregroundStyle(Color.white)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 12)
+
                 ExercisePlayerView(kind: lesson.exerciseKind, prompt: lesson.exercisePrompt, answerText: $answerText)
 
                 if !lesson.example.isEmpty && lesson.example != "TODO" {
                     Text("Пример: \(lesson.example)")
-                        .font(.lumiCaption)
-                        .foregroundStyle(.secondary)
+                        .font(.lumi(11.5, weight: .semibold))
+                        .foregroundStyle(LumiColor.textFaint2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 12)
                 }
 
-                Button("Завершить", action: submit)
-                    .buttonStyle(.borderedProminent)
-                    .tint(LumiColor.accent)
-                    .disabled(answerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Spacer(minLength: 20)
+
+                Button {
+                    showCrisisSupport = true
+                } label: {
+                    Text("Мне сейчас правда тяжело →")
+                        .font(.lumi(11, weight: .semibold))
+                        .foregroundStyle(LumiColor.textSecondary)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 12)
+
+                PrimaryButton(title: "Завершить", isEnabled: !isAnswerEmpty, action: submit)
             }
-            .padding()
         }
-        .navigationDestination(isPresented: $showCompletion) {
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
+        // Presented as a cover, not a push: dismissing it pops the finished
+        // lesson too, so "Далее" lands back on Home/the course instead of
+        // on the exercise the user just completed.
+        .fullScreenCover(isPresented: $showCompletion, onDismiss: { dismiss() }) {
             LessonCompletionView(course: course, lesson: lesson)
         }
         .fullScreenCover(isPresented: $showCrisisSupport) {
@@ -123,6 +182,7 @@ struct LessonPlayerView: View {
             NotificationScheduler.reschedule(hour: reminderHour, minute: reminderMinute, lastActiveDate: existing.lastActiveDate)
         }
 
+        WidgetSync.refresh()
         showCompletion = true
     }
 
@@ -154,5 +214,6 @@ struct LessonPlayerView: View {
     NavigationStack {
         LessonPlayerView(course: CourseCatalog.courses[0], lesson: CourseCatalog.courses[0].lessons[0])
     }
+    .preferredColorScheme(.dark)
     .modelContainer(PersistenceController.makePreviewContainer())
 }

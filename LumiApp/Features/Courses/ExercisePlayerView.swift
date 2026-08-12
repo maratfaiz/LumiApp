@@ -4,7 +4,10 @@ import SwiftUI
 /// keeps `answerText` as a single composed string: empty while the
 /// exercise is incomplete, and the full answer once it's ready to submit.
 /// LessonPlayerView crisis-checks and submits that string uniformly,
-/// regardless of which of the 10 mechanics produced it.
+/// regardless of which of the mechanics produced it.
+///
+/// Every control here uses the design's dark input treatment (translucent
+/// fill + hairline border + purple accent) instead of the system defaults.
 struct ExercisePlayerView: View {
     let kind: ExerciseKind
     let prompt: String
@@ -46,15 +49,141 @@ struct ExercisePlayerView: View {
     }
 }
 
+// MARK: - Shared building blocks
+
+/// Multi-line answer field on the design's dark input surface.
+private struct ExerciseTextEditor: View {
+    @Binding var text: String
+    var height: CGFloat = 120
+    var placeholder: String = "Напиши свой ответ…"
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $text)
+                .font(.lumi(13, weight: .semibold))
+                .padding(8)
+                .frame(height: height)
+                .lumiInputField()
+            if text.isEmpty {
+                Text(placeholder)
+                    .font(.lumi(13, weight: .semibold))
+                    .foregroundStyle(LumiColor.textDim)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 16)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+}
+
+private struct ExerciseFieldLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.lumi(11.5, weight: .bold))
+            .foregroundStyle(LumiColor.textTertiary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// Full-width option row, the same visual language as the onboarding
+/// questionnaire's `SelectableOptionRow` but without a leading icon.
+private struct ExerciseOptionRow: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Text(title)
+                    .font(.lumi(13, weight: isSelected ? .bold : .semibold))
+                    .foregroundStyle(isSelected ? Color.white : LumiColor.textBody)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                if isSelected {
+                    ZStack {
+                        Circle().fill(LumiColor.purple1).frame(width: 20, height: 20)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundStyle(Color.white)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(isSelected ? LumiColor.purple1.opacity(0.18) : LumiColor.cardFillLight)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isSelected ? LumiColor.purple1 : LumiColor.cardBorder, lineWidth: isSelected ? 2 : 1)
+        )
+        .buttonStyle(.plain)
+    }
+}
+
+/// 1–5 slider with the design's value badge.
+private struct ExerciseRatingSlider: View {
+    let label: String
+    @Binding var value: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(label)
+                    .font(.lumi(13, weight: .semibold))
+                    .foregroundStyle(LumiColor.textBody)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                Text("\(Int(value))/5")
+                    .font(.lumi(12, weight: .heavy))
+                    .foregroundStyle(LumiColor.purpleLight)
+            }
+            Slider(value: $value, in: 1...5, step: 1)
+                .tint(LumiColor.purple1)
+        }
+    }
+}
+
+private struct ExerciseTimePicker: View {
+    let label: String
+    @Binding var date: Date
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.lumi(12.5, weight: .semibold))
+                .foregroundStyle(LumiColor.textBody)
+            Spacer(minLength: 8)
+            DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
+                .labelsHidden()
+                .environment(\.colorScheme, .dark)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .lumiCard(fill: LumiColor.cardFillLight, radius: 12)
+    }
+}
+
+private let hourMinuteFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm"
+    return formatter
+}()
+
 // MARK: - 1. Свободный ввод
 
 private struct FreeTextExercise: View {
     @Binding var answerText: String
 
     var body: some View {
-        TextEditor(text: $answerText)
-            .frame(height: 120)
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+        ExerciseTextEditor(text: $answerText)
     }
 }
 
@@ -69,36 +198,23 @@ private struct ChoiceOrCustomExercise: View {
     @State private var customText = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(options, id: \.self) { option in
-                Button {
+                ExerciseOptionRow(title: option, isSelected: selected == option && !useCustom) {
                     useCustom = false
                     selected = option
                     answerText = option
-                } label: {
-                    HStack {
-                        Text(option)
-                        Spacer()
-                        if selected == option && !useCustom {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                    }
                 }
-                .buttonStyle(.bordered)
-                .tint(LumiColor.accent)
             }
 
-            Button("Свой вариант") {
+            ExerciseOptionRow(title: "Свой вариант", isSelected: useCustom) {
                 useCustom = true
                 selected = nil
                 answerText = customText
             }
-            .buttonStyle(.bordered)
 
             if useCustom {
-                TextEditor(text: $customText)
-                    .frame(height: 80)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+                ExerciseTextEditor(text: $customText, height: 90, placeholder: "Свой вариант…")
                     .onChange(of: customText) { _, newValue in
                         answerText = newValue
                     }
@@ -114,23 +230,33 @@ private struct FactOrJudgmentExercise: View {
     @State private var choice: String?
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 10) {
             choiceButton("Факт")
             choiceButton("Оценка")
         }
     }
 
     private func choiceButton(_ title: String) -> some View {
-        Button {
+        let isSelected = choice == title
+        return Button {
             choice = title
             answerText = title
         } label: {
             Text(title)
+                .font(.lumi(14, weight: isSelected ? .heavy : .bold))
+                .foregroundStyle(isSelected ? Color.white : LumiColor.textBody)
                 .frame(maxWidth: .infinity)
-                .padding()
+                .padding(.vertical, 16)
         }
-        .buttonStyle(.bordered)
-        .tint(choice == title ? LumiColor.accent : .secondary)
+        .buttonStyle(.plain)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(isSelected ? LumiColor.purple1.opacity(0.22) : LumiColor.cardFillLight)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isSelected ? LumiColor.purple1 : LumiColor.cardBorder, lineWidth: isSelected ? 2 : 1)
+        )
     }
 }
 
@@ -141,10 +267,8 @@ private struct RewriteAsFactExercise: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Сформулируй нейтральный факт:").font(.lumiCaption).foregroundStyle(.secondary)
-            TextEditor(text: $answerText)
-                .frame(height: 100)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+            ExerciseFieldLabel(text: "Сформулируй нейтральный факт:")
+            ExerciseTextEditor(text: $answerText, height: 100)
         }
     }
 }
@@ -160,14 +284,24 @@ private struct DefusionExercise: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("\(demoPrefix) я недостаточно хорош(а).")
-                .font(.lumiBody)
+                .font(.lumi(13, weight: .semibold))
                 .italic()
-                .foregroundStyle(.secondary)
-            Text("Теперь попробуй сам(а):").font(.lumiCaption).foregroundStyle(.secondary)
-            HStack(alignment: .top, spacing: 4) {
-                Text(demoPrefix).font(.lumiBody)
-                TextField("...", text: $completion, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+                .foregroundStyle(LumiColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lumiCard(fill: LumiColor.cardFillFaint, radius: 12)
+
+            ExerciseFieldLabel(text: "Теперь попробуй сам(а):")
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(demoPrefix)
+                    .font(.lumi(13, weight: .heavy))
+                    .foregroundStyle(LumiColor.purpleLight)
+                TextField("", text: $completion, axis: .vertical)
+                    .font(.lumi(13, weight: .semibold))
+                    .padding(12)
+                    .lumiInputField()
             }
             .onChange(of: completion) { _, newValue in
                 let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -186,17 +320,13 @@ private struct LetterToFriendThenSelfExercise: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Напиши поддержку другу:").font(.lumiCaption).foregroundStyle(.secondary)
-                TextEditor(text: $toFriend)
-                    .frame(height: 80)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+            VStack(alignment: .leading, spacing: 6) {
+                ExerciseFieldLabel(text: "Напиши поддержку другу:")
+                ExerciseTextEditor(text: $toFriend, height: 90, placeholder: "Что бы ты сказал(а) другу…")
             }
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Теперь примени те же слова к себе:").font(.lumiCaption).foregroundStyle(.secondary)
-                TextEditor(text: $toSelf)
-                    .frame(height: 80)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+            VStack(alignment: .leading, spacing: 6) {
+                ExerciseFieldLabel(text: "Теперь примени те же слова к себе:")
+                ExerciseTextEditor(text: $toSelf, height: 90, placeholder: "Те же слова — себе…")
             }
         }
         .onChange(of: toFriend) { _, _ in recompute() }
@@ -220,17 +350,34 @@ private struct MatchingExercise: View {
     @State private var shuffledPhrases: [String] = []
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(pairs) { pair in
-                HStack {
-                    Text(pair.category).font(.lumiBody.bold()).frame(width: 140, alignment: .leading)
-                    Picker(pair.category, selection: pickerBinding(for: pair.category)) {
-                        Text("—").tag("")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(pair.category)
+                        .font(.lumi(13, weight: .heavy))
+                        .foregroundStyle(Color.white)
+                    Menu {
+                        Button("—") { assign(nil, to: pair.category) }
                         ForEach(shuffledPhrases, id: \.self) { phrase in
-                            Text(phrase).tag(phrase)
+                            Button(phrase) { assign(phrase, to: pair.category) }
                         }
+                    } label: {
+                        HStack {
+                            Text(assignments[pair.category] ?? "Выбрать…")
+                                .font(.lumi(12.5, weight: .semibold))
+                                .foregroundStyle(assignments[pair.category] == nil ? LumiColor.textDim : LumiColor.textBright)
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(LumiColor.textDim)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lumiCard(fill: LumiColor.cardFillLight, radius: 12)
                     }
-                    .labelsHidden()
                 }
             }
         }
@@ -241,14 +388,9 @@ private struct MatchingExercise: View {
         }
     }
 
-    private func pickerBinding(for category: String) -> Binding<String> {
-        Binding(
-            get: { assignments[category] ?? "" },
-            set: { newValue in
-                assignments[category] = newValue.isEmpty ? nil : newValue
-                recompute()
-            }
-        )
+    private func assign(_ phrase: String?, to category: String) {
+        assignments[category] = phrase
+        recompute()
     }
 
     private func recompute() {
@@ -266,9 +408,7 @@ private struct SupportLetterExercise: View {
     @Binding var answerText: String
 
     var body: some View {
-        TextEditor(text: $answerText)
-            .frame(height: 140)
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+        ExerciseTextEditor(text: $answerText, height: 150, placeholder: "Напиши себе письмо поддержки…")
     }
 }
 
@@ -282,25 +422,15 @@ private struct ActionAndTimeExercise: View {
     @State private var selectedTime = Date.now
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(actionOptions, id: \.self) { option in
-                Button {
+                ExerciseOptionRow(title: option, isSelected: selectedAction == option) {
                     selectedAction = option
                     recompute()
-                } label: {
-                    HStack {
-                        Text(option)
-                        Spacer()
-                        if selectedAction == option {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                    }
                 }
-                .buttonStyle(.bordered)
-                .tint(LumiColor.accent)
             }
 
-            DatePicker("Время дня", selection: $selectedTime, displayedComponents: .hourAndMinute)
+            ExerciseTimePicker(label: "Время дня", date: $selectedTime)
                 .onChange(of: selectedTime) { _, _ in recompute() }
         }
     }
@@ -310,9 +440,7 @@ private struct ActionAndTimeExercise: View {
             answerText = ""
             return
         }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        answerText = "\(selectedAction) в \(formatter.string(from: selectedTime))"
+        answerText = "\(selectedAction) в \(hourMinuteFormatter.string(from: selectedTime))"
     }
 }
 
@@ -326,28 +454,16 @@ private struct ValuesExercise: View {
     @State private var situation = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             ForEach(valueOptions, id: \.self) { value in
-                Button {
+                ExerciseOptionRow(title: value, isSelected: selectedValue == value) {
                     selectedValue = value
                     recompute()
-                } label: {
-                    HStack {
-                        Text(value)
-                        Spacer()
-                        if selectedValue == value {
-                            Image(systemName: "checkmark.circle.fill")
-                        }
-                    }
                 }
-                .buttonStyle(.bordered)
-                .tint(LumiColor.accent)
             }
 
-            Text("В какой ситуации ей стоит следовать?").font(.lumiCaption).foregroundStyle(.secondary)
-            TextEditor(text: $situation)
-                .frame(height: 80)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+            ExerciseFieldLabel(text: "В какой ситуации ей стоит следовать?")
+            ExerciseTextEditor(text: $situation, height: 90, placeholder: "Опиши ситуацию…")
                 .onChange(of: situation) { _, _ in recompute() }
         }
     }
@@ -376,31 +492,22 @@ private struct MultiSliderExercise: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 18) {
             ForEach(labels.indices, id: \.self) { index in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(labels[index]).font(.lumiBody)
-                        Spacer()
-                        Text("\(Int(values[index]))/5")
-                            .font(.lumiCaption.bold())
-                            .foregroundStyle(LumiColor.accent)
-                    }
-                    Slider(
-                        value: Binding(
-                            get: { values[index] },
-                            set: { newValue in
-                                values[index] = newValue
-                                recompute()
-                            }
-                        ),
-                        in: 1...5,
-                        step: 1
+                ExerciseRatingSlider(
+                    label: labels[index],
+                    value: Binding(
+                        get: { values[index] },
+                        set: { newValue in
+                            values[index] = newValue
+                            recompute()
+                        }
                     )
-                    .tint(LumiColor.accent)
-                }
+                )
             }
         }
+        .padding(14)
+        .lumiCard(fill: LumiColor.cardFillLight, radius: 14)
         .onAppear { recompute() }
     }
 
@@ -425,19 +532,18 @@ private struct MultiPartReflectionExercise: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             ForEach(labels.indices, id: \.self) { index in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(labels[index]).font(.lumiCaption).foregroundStyle(.secondary)
-                    TextEditor(
+                VStack(alignment: .leading, spacing: 6) {
+                    ExerciseFieldLabel(text: labels[index])
+                    ExerciseTextEditor(
                         text: Binding(
                             get: { texts[index] },
                             set: { newValue in
                                 texts[index] = newValue
                                 recompute()
                             }
-                        )
+                        ),
+                        height: 80
                     )
-                    .frame(height: 70)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
                 }
             }
         }
@@ -464,24 +570,13 @@ private struct RatingWithReflectionExercise: View {
     @State private var reflection = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(scaleLabel).font(.lumiBody)
-                    Spacer()
-                    Text("\(Int(rating))/5")
-                        .font(.lumiCaption.bold())
-                        .foregroundStyle(LumiColor.accent)
-                }
-                Slider(value: $rating, in: 1...5, step: 1)
-                    .tint(LumiColor.accent)
-                    .onChange(of: rating) { _, _ in recompute() }
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(reflectionLabel).font(.lumiCaption).foregroundStyle(.secondary)
-                TextEditor(text: $reflection)
-                    .frame(height: 90)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+        VStack(alignment: .leading, spacing: 18) {
+            ExerciseRatingSlider(label: scaleLabel, value: $rating)
+                .onChange(of: rating) { _, _ in recompute() }
+
+            VStack(alignment: .leading, spacing: 6) {
+                ExerciseFieldLabel(text: reflectionLabel)
+                ExerciseTextEditor(text: $reflection, height: 90)
                     .onChange(of: reflection) { _, _ in recompute() }
             }
         }
@@ -502,17 +597,19 @@ private struct TaggedThoughtExercise: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextEditor(text: $thought)
-                .frame(height: 90)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+            ExerciseTextEditor(text: $thought, height: 90, placeholder: "Напиши свою мысль…")
                 .onChange(of: thought) { _, newValue in recompute(newValue) }
 
             let trimmed = thought.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmed.isEmpty {
                 Text("«\(trimmed) \(suffix)»")
-                    .font(.lumiCaption)
+                    .font(.lumi(12.5, weight: .semibold))
                     .italic()
-                    .foregroundStyle(LumiColor.accent)
+                    .foregroundStyle(LumiColor.purpleLight)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .lumiAccentCard(LumiColor.purple1, radius: 12)
             }
         }
     }
@@ -532,12 +629,10 @@ private struct FreeTextWithTimePickerExercise: View {
     @State private var time = Date.now
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            TextEditor(text: $text)
-                .frame(height: 100)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(LumiColor.border))
+        VStack(alignment: .leading, spacing: 14) {
+            ExerciseTextEditor(text: $text, height: 100)
                 .onChange(of: text) { _, _ in recompute() }
-            DatePicker(timeLabel, selection: $time, displayedComponents: .hourAndMinute)
+            ExerciseTimePicker(label: timeLabel, date: $time)
                 .onChange(of: time) { _, _ in recompute() }
         }
     }
@@ -548,8 +643,6 @@ private struct FreeTextWithTimePickerExercise: View {
             answerText = ""
             return
         }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        answerText = "\(trimmed) — сегодня в \(formatter.string(from: time))"
+        answerText = "\(trimmed) — сегодня в \(hourMinuteFormatter.string(from: time))"
     }
 }

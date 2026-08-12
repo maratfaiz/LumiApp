@@ -57,10 +57,18 @@ targets:
         excludes:
           - "Info.plist"
           - "Assets.xcassets/**"
+      # Shared with the app target so the widgets read the same data and
+      # the same design tokens instead of keeping a drifting copy.
       - path: LumiApp/Core/Models/UserProgress.swift
       - path: LumiApp/Core/Models/GamificationRules.swift
+      - path: LumiApp/Core/Models/Course.swift
+      - path: LumiApp/Core/Models/ExerciseKind.swift
+      - path: LumiApp/Core/Models/RussianPlural.swift
       - path: LumiApp/Core/Persistence/AppGroup.swift
+      - path: LumiApp/Core/Persistence/CourseCatalog.swift
       - path: LumiApp/Core/Persistence/PersistenceController.swift
+      - path: LumiApp/Core/DesignSystem/LumiColor.swift
+      - path: LumiApp/Core/DesignSystem/LumiTypography.swift
     resources:
       - path: LumiWidget/Assets.xcassets
     entitlements:
