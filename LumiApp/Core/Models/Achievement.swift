@@ -52,5 +52,15 @@ enum AchievementCatalog {
             conditionDescription: "Серия 30 дней",
             isUnlocked: { $0.bestStreakDays >= 30 }
         ),
+        // Раньше это достижение не реализовывалось, потому что механики
+        // «дневника» в приложении не было. Теперь она есть — техника
+        // «Дневник эмоций» покупается в магазине и пишет записи, — так что
+        // условие из документа наконец однозначно.
+        Achievement(
+            id: "achievement-journal-5",
+            title: "Дневник × 5",
+            conditionDescription: "5 записей в дневнике эмоций",
+            isUnlocked: { $0.journalEntryCount >= 5 }
+        ),
     ]
 }

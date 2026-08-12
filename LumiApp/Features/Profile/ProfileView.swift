@@ -263,6 +263,7 @@ enum AchievementStyle {
         case "achievement-early-bird": return "icon-sunrise"
         case "achievement-course-complete": return "icon-seal"
         case "achievement-streak-30": return "icon-calendar"
+        case "achievement-journal-5": return "icon-journal"
         default: return "icon-trophy"
         }
     }
@@ -274,6 +275,7 @@ enum AchievementStyle {
         case "achievement-early-bird": return LumiColor.yellow
         case "achievement-course-complete": return LumiColor.purpleLight
         case "achievement-streak-30": return LumiColor.blueChip
+        case "achievement-journal-5": return LumiColor.green
         default: return LumiColor.purple1
         }
     }

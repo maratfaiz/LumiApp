@@ -49,18 +49,9 @@ struct WardrobeView: View {
                     }
                 }
 
-                if let previewedItem, previewedItem.id != equippedSkinID {
-                    PrimaryButton(
-                        title: isOwned(previewedItem) ? "Надеть образ" : "Открыть в магазине",
-                        isEnabled: true
-                    ) {
-                        if isOwned(previewedItem) {
-                            equip(previewedItem)
-                        } else {
-                            showShop = true
-                        }
-                    }
-                    .padding(.top, 14)
+                if let previewedItem {
+                    previewAction(for: previewedItem)
+                        .padding(.top, 14)
                 }
             }
         }
@@ -93,6 +84,31 @@ struct WardrobeView: View {
                     )
                 )
         )
+    }
+
+    @ViewBuilder
+    private func previewAction(for item: ShopItem) -> some View {
+        if ShopService.isEquipped(item, progress: progress) {
+            SecondaryButton(title: "Снять образ") { toggleEquip(item) }
+        } else if isOwned(item) {
+            PrimaryButton(title: "Надеть образ") { toggleEquip(item) }
+        } else if let block = ShopService.purchaseBlock(for: item, progress: progress) {
+            VStack(spacing: 8) {
+                PrimaryButton(title: buyTitle(item), isEnabled: false, action: {})
+                Text(block.message)
+                    .font(.lumi(11.5, weight: .semibold))
+                    .foregroundStyle(LumiColor.orange1)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            PrimaryButton(title: buyTitle(item)) { buy(item) }
+        }
+    }
+
+    private func buyTitle(_ item: ShopItem) -> String {
+        guard let price = item.priceInLumens else { return "Откроется за уроки" }
+        return "Купить за \(price) ✦"
     }
 
     // MARK: Filter
@@ -135,7 +151,7 @@ struct WardrobeView: View {
         let owned = isOwned(item)
         let equipped = item.id == equippedSkinID
         let previewed = item.id == previewSkinID
-        let tint = rarityColor(item.rarity)
+        let tint = ShopStyle.rarityColor(item.rarity)
         let borderColor = equipped ? LumiColor.yellow : (previewed ? LumiColor.purple1 : tint.opacity(0.6))
         let fillColor = equipped ? LumiColor.yellow.opacity(0.1) : (previewed ? LumiColor.purple1.opacity(0.14) : tint.opacity(0.08))
 
@@ -214,17 +230,8 @@ struct WardrobeView: View {
         switch item.unlock {
         case .lessonsCompleted(let required):
             return "\(progress?.completedLessonIDs.count ?? 0)/\(required) уроков"
-        case .lumens:
-            return "В магазине →"
-        }
-    }
-
-    private func rarityColor(_ rarity: AccessoryRarity?) -> Color {
-        switch rarity {
-        case .common: return LumiColor.textSecondary
-        case .rare: return Color(hex: 0x5B9FFF)
-        case .epic: return Color(hex: 0xFF6EC7)
-        case nil: return LumiColor.purpleLight
+        case .lumens(let price):
+            return "\(price) ✦"
         }
     }
 
@@ -234,21 +241,34 @@ struct WardrobeView: View {
     }
 
     private func isOwned(_ item: ShopItem) -> Bool {
-        guard let progress else { return false }
-        if case .lessonsCompleted(let required) = item.unlock {
-            return progress.completedLessonIDs.count >= required || progress.unlockedMascotSkinIDs.contains(item.id)
-        }
-        return progress.unlockedMascotSkinIDs.contains(item.id)
+        ShopService.isOwned(item, progress: progress)
     }
 
-    private func equip(_ item: ShopItem) {
+    /// Надеть / снять — одна и та же кнопка, как в инвентаре.
+    private func toggleEquip(_ item: ShopItem) {
         let existing = progress ?? {
             let new = UserProgress()
             modelContext.insert(new)
             return new
         }()
-        existing.equippedMascotSkinID = item.id
+        ShopService.toggleEquip(item, progress: existing)
         WidgetSync.refresh()
+    }
+
+    /// Покупка прямо из гардероба — не гоняем пользователя в магазин,
+    /// если у него уже хватает люменов.
+    private func buy(_ item: ShopItem) {
+        let existing = progress ?? {
+            let new = UserProgress()
+            modelContext.insert(new)
+            return new
+        }()
+        if case .purchased = ShopService.purchase(item, progress: existing) {
+            ShopService.toggleEquip(item, progress: existing)
+            WidgetSync.refresh()
+        } else {
+            showShop = true
+        }
     }
 }
 

@@ -11,6 +11,7 @@ import SwiftUI
 struct BreathingView: View {
     @State private var viewModel = BreathingViewModel()
     @State private var showInfo = false
+    @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -26,6 +27,7 @@ struct BreathingView: View {
                     title: "Дыхание завершено",
                     subtitle: "Ты сделал(а) \(viewModel.completedCycles) \(RussianPlural.form(viewModel.completedCycles, one: "раунд", few: "раунда", many: "раундов")) 4-7-8. Тело и разум немного спокойнее",
                     mascotAsset: "mascot-breathcomplete",
+                    reward: reward,
                     action: { dismiss() }
                 )
             } else {
@@ -52,6 +54,8 @@ struct BreathingView: View {
                 Text("Цикл \(min(viewModel.completedCycles + 1, viewModel.targetCycles)) из \(viewModel.targetCycles)")
                     .font(.lumi(12, weight: .semibold))
                     .foregroundStyle(LumiColor.textSecondary)
+
+                PracticeRewardBadge(practice: .breathing, progress: progress)
 
                 HStack(spacing: 8) {
                     ControlPillButton(
@@ -169,7 +173,7 @@ struct BreathingView: View {
             modelContext.insert(new)
             return new
         }()
-        existing.lumens += GamificationRules.lumensPerModeSession
+        reward = PracticeRewardLedger.grantReward(for: .breathing, progress: existing)
         viewModel.markRewardGranted()
         WidgetSync.refresh()
     }

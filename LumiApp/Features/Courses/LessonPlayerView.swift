@@ -105,13 +105,8 @@ struct LessonPlayerView: View {
 
                 ExercisePlayerView(kind: lesson.exerciseKind, prompt: lesson.exercisePrompt, answerText: $answerText)
 
-                if !lesson.example.isEmpty && lesson.example != "TODO" {
-                    Text("Пример: \(lesson.example)")
-                        .font(.lumi(11.5, weight: .semibold))
-                        .foregroundStyle(LumiColor.textFaint2)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 12)
-                }
+                hintArea
+                    .padding(.top, 12)
 
                 Spacer(minLength: 20)
 
@@ -140,6 +135,73 @@ struct LessonPlayerView: View {
         .fullScreenCover(isPresented: $showCrisisSupport) {
             CrisisSupportView()
         }
+    }
+
+    // MARK: - Подсказка (F13, бустер «Подсказка в уроке»)
+
+    private var hasExample: Bool {
+        !lesson.example.isEmpty && lesson.example != "TODO"
+    }
+
+    private var isHintRevealed: Bool {
+        ShopService.isHintRevealed(lessonID: lesson.id, progress: progress)
+    }
+
+    private var hintTokens: Int { progress?.lessonHintTokens ?? 0 }
+
+    @ViewBuilder private var hintArea: some View {
+        if hasExample {
+            if isHintRevealed {
+                HStack(alignment: .top, spacing: 10) {
+                    LumiIcon(name: "icon-hint", size: 16, fallbackSystemImage: "lightbulb.fill")
+                        .foregroundStyle(LumiColor.yellow)
+                    Text("Пример: \(lesson.example)")
+                        .font(.lumi(12, weight: .semibold))
+                        .foregroundStyle(LumiColor.textBody)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lumiAccentCard(LumiColor.yellow, radius: 12)
+            } else {
+                Button {
+                    revealHint()
+                } label: {
+                    HStack(spacing: 8) {
+                        LumiIcon(name: "icon-hint", size: 15, fallbackSystemImage: "lightbulb")
+                            .foregroundStyle(hintTokens > 0 ? LumiColor.yellow : LumiColor.textDim)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Показать пример ответа")
+                                .font(.lumi(12.5, weight: .bold))
+                                .foregroundStyle(hintTokens > 0 ? LumiColor.textBright : LumiColor.textSecondary)
+                            Text(hintTokens > 0
+                                 ? "Подсказок: \(hintTokens) — спишется одна"
+                                 : "Подсказки закончились — их можно купить в магазине")
+                                .font(.lumi(10.5, weight: .semibold))
+                                .foregroundStyle(LumiColor.textDim)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(hintTokens == 0)
+                .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        .foregroundStyle(Color.white.opacity(0.15))
+                )
+            }
+        }
+    }
+
+    private func revealHint() {
+        guard let progress else { return }
+        ShopService.revealHint(lessonID: lesson.id, progress: progress)
     }
 
     private func submit() {

@@ -10,6 +10,7 @@ import SwiftUI
 struct AffirmationsView: View {
     @State private var viewModel = AffirmationsViewModel()
     @State private var dragOffset: CGFloat = 0
+    @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +26,7 @@ struct AffirmationsView: View {
                     title: "Сеанс завершён",
                     subtitle: "Ты повторил(а) все \(viewModel.cardCount) аффирмаций. Пусть эти слова останутся с тобой сегодня",
                     mascotAsset: "mascot-affirmcomplete",
+                    reward: reward,
                     action: { dismiss() }
                 )
             } else {
@@ -43,6 +45,8 @@ struct AffirmationsView: View {
         LumiScreen {
             VStack(spacing: 18) {
                 Spacer(minLength: 8)
+
+                PracticeRewardBadge(practice: .affirmations, progress: progress)
 
                 card
                     .offset(x: dragOffset)
@@ -180,7 +184,7 @@ struct AffirmationsView: View {
             modelContext.insert(new)
             return new
         }()
-        existing.lumens += GamificationRules.lumensPerModeSession
+        reward = PracticeRewardLedger.grantReward(for: .affirmations, progress: existing)
         viewModel.markRewardGranted()
         WidgetSync.refresh()
     }

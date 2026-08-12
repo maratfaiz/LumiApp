@@ -10,6 +10,7 @@ import SwiftUI
 /// mascot inside the dashed halo, ambience and duration chip rows.
 struct MeditationView: View {
     @State private var viewModel = MeditationViewModel()
+    @State private var reward: PracticeRewardLedger.Outcome = .alreadyRewardedToday
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +24,7 @@ struct MeditationView: View {
                     title: "Медитация завершена",
                     subtitle: "Ты провёл(а) \(viewModel.selectedDurationMinutes) минут в тишине. Дай себе немного этого спокойствия на весь день",
                     mascotAsset: "mascot-meditationcomplete",
+                    reward: reward,
                     action: { dismiss() }
                 )
             } else {
@@ -48,6 +50,8 @@ struct MeditationView: View {
                 Text(stateLabel)
                     .font(.lumi(13, weight: .semibold))
                     .foregroundStyle(LumiColor.textSecondary)
+
+                PracticeRewardBadge(practice: .meditation, progress: progress)
 
                 halo
 
@@ -172,7 +176,7 @@ struct MeditationView: View {
             modelContext.insert(new)
             return new
         }()
-        existing.lumens += GamificationRules.lumensPerModeSession
+        reward = PracticeRewardLedger.grantReward(for: .meditation, progress: existing)
         viewModel.markRewardGranted()
         WidgetSync.refresh()
     }

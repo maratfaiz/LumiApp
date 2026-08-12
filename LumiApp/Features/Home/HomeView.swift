@@ -36,10 +36,14 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
 
+                freezeNotice
+
                 currentLessonCard
 
                 SectionLabel(text: "Сегодня для тебя")
                 modeTiles
+
+                unlockedTechniques
 
                 wardrobePromo
                 quoteOfTheDayCard
@@ -149,6 +153,72 @@ struct HomeView: View {
         .buttonStyle(.plain)
         .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
+    }
+
+    // MARK: Techniques bought in the shop
+
+    private var ownedTechniques: [ShopItem] {
+        ShopCatalog.secretTechniques.filter { ShopService.isOwned($0, progress: progress) }
+    }
+
+    @ViewBuilder private var unlockedTechniques: some View {
+        if !ownedTechniques.isEmpty {
+            SectionLabel(text: "Твои техники")
+            HStack(spacing: 8) {
+                ForEach(ownedTechniques) { item in
+                    NavigationLink(destination: TechniqueScreen(item: item)) {
+                        VStack(spacing: 6) {
+                            ShopItemArtwork(item: item, size: 28)
+                            Text(item.title)
+                                .font(.lumi(10, weight: .bold))
+                                .foregroundStyle(LumiColor.textBody)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(LumiColor.cardFillLight))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(LumiColor.cardBorder, lineWidth: 1))
+                }
+            }
+        }
+    }
+
+    // MARK: Freeze notice
+
+    /// Заморозка срабатывает сама (StreakEngine) — без этой карточки
+    /// пользователь бы просто не заметил, что покупка сработала.
+    @ViewBuilder private var freezeNotice: some View {
+        if let usedAt = recentFreezeDate {
+            HStack(spacing: 11) {
+                ZStack {
+                    Circle().fill(LumiColor.blueChip.opacity(0.18)).frame(width: 34, height: 34)
+                    LumiIcon(name: "icon-freeze", size: 16, fallbackSystemImage: "snowflake")
+                        .foregroundStyle(LumiColor.blueChip)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Заморозка сохранила серию")
+                        .font(.lumi(12.5, weight: .heavy))
+                        .foregroundStyle(Color.white)
+                    Text(usedAt, format: .dateTime.day().month())
+                        .font(.lumi(10.5, weight: .semibold))
+                        .foregroundStyle(LumiColor.blueChip)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lumiAccentCard(LumiColor.blueChip, radius: 14)
+        }
+    }
+
+    private var recentFreezeDate: Date? {
+        guard let progress else { return nil }
+        let calendar = Calendar.current
+        guard let threshold = calendar.date(byAdding: .day, value: -3, to: .now) else { return nil }
+        return progress.freezeUsedDates.filter { $0 >= threshold }.max()
     }
 
     // MARK: Wardrobe promo

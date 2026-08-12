@@ -12,6 +12,7 @@
 
 - [`docs/product/`](docs/product/README.md) — продуктовая документация (PRD, MVP scope, функции, контент курсов, экономика, кризисный протокол).
 - [`docs/design/`](docs/design/README.md) — как устроен дизайн-слой в коде (токены, компоненты, правила).
+- [`docs/economy.md`](docs/economy.md) — люмены, магазин, бустеры: где логика и какие правила.
 - [`docs/design/prototype/`](docs/design/prototype/README.md) — кликабельный дизайн-прототип экранов (нужен локальный сервер, см. README внутри).
 - `LumiApp/` — исходный код iOS-приложения (SwiftUI, iOS 17+).
 - `LumiWidget/` — виджеты для домашнего экрана (WidgetKit).

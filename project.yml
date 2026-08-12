@@ -63,6 +63,7 @@ targets:
       - path: LumiApp/Core/Models/GamificationRules.swift
       - path: LumiApp/Core/Models/Course.swift
       - path: LumiApp/Core/Models/ExerciseKind.swift
+      - path: LumiApp/Core/Models/JournalEntry.swift
       - path: LumiApp/Core/Models/RussianPlural.swift
       - path: LumiApp/Core/Persistence/AppGroup.swift
       - path: LumiApp/Core/Persistence/CourseCatalog.swift

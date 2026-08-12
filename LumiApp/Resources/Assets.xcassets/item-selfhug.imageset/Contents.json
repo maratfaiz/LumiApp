@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "item-selfhug.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

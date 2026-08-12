@@ -26,11 +26,24 @@ final class UserProgress {
     var favoriteAffirmationIDs: [String]
     /// F33 "Ранняя пташка" — count of lessons finished before 9:00 local time.
     var earlyBirdLessonCount: Int
+    /// F13 booster — one extra *rewarded* practice session on a day whose
+    /// normal reward for that practice is already used up
+    /// (see `PracticeRewardLedger`).
     var extraDailyTaskTokens: Int
     /// F13 booster — deliberate pay-to-win exception (Product Owner
-    /// decision, see ShopCatalog.swift). Consumption in LessonPlayerView
-    /// isn't wired yet.
+    /// decision, see ShopCatalog.swift). Spent in LessonPlayerView to
+    /// reveal the lesson's worked example.
     var lessonHintTokens: Int
+    /// Lessons whose hint has already been paid for — a revealed hint stays
+    /// revealed, so a replay never charges twice.
+    var hintedLessonIDs: [String]
+    /// One entry per already-rewarded practice session, keyed
+    /// `<practice>-<yyyy-MM-dd>` (plus an `-extraN` suffix when an
+    /// "extra task" token paid for it). Drives the daily reward limit.
+    var rewardedPracticeKeys: [String]
+    /// F30 "Дневник эмоций" (unlocked in the shop) — number of saved
+    /// entries, kept here so achievements can read it without a fetch.
+    var journalEntryCount: Int
     /// Q3 onboarding answer, raw PreferredFormat.rawValue. Only controls
     /// which mode tiles (Дыхание/Аффирмации/Медитация) surface on Home —
     /// never gates access, the user can always reach every mode.
@@ -62,6 +75,9 @@ final class UserProgress {
         earlyBirdLessonCount: Int = 0,
         extraDailyTaskTokens: Int = 0,
         lessonHintTokens: Int = 0,
+        hintedLessonIDs: [String] = [],
+        rewardedPracticeKeys: [String] = [],
+        journalEntryCount: Int = 0,
         preferredFormatRawValue: String? = nil,
         userDisplayName: String? = nil,
         notifiedAchievementIDs: [String] = []
@@ -84,6 +100,9 @@ final class UserProgress {
         self.earlyBirdLessonCount = earlyBirdLessonCount
         self.extraDailyTaskTokens = extraDailyTaskTokens
         self.lessonHintTokens = lessonHintTokens
+        self.hintedLessonIDs = hintedLessonIDs
+        self.rewardedPracticeKeys = rewardedPracticeKeys
+        self.journalEntryCount = journalEntryCount
         self.preferredFormatRawValue = preferredFormatRawValue
         self.userDisplayName = userDisplayName
         self.notifiedAchievementIDs = notifiedAchievementIDs
