@@ -101,7 +101,7 @@ struct ManualFreezeTests {
     @Test func manualFreezeIsRefusedWhenTheDayIsAlreadyDone() {
         let calendar = utcCalendar
         let today = day(0, calendar: calendar)
-        let progress = UserProgress(streakFreezesAvailable: 1, lessonCompletionDates: [today], lastActiveDate: today)
+        let progress = UserProgress(streakFreezesAvailable: 1, lastActiveDate: today, lessonCompletionDates: [today])
 
         let result = StreakEngine.applyManualFreeze(on: progress, for: today, calendar: calendar)
 
